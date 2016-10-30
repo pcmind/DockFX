@@ -821,7 +821,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         node = delayOpenHandler.open(title);
 
       if(null != node) {
-        node.setFloating(true, null);
+        node.setFloating(true, null, this);
 
         node.getStage().setX(position[0]);
         node.getStage().setY(position[1]);
