@@ -24,25 +24,16 @@ import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Stack;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.sun.javafx.css.StyleManager;
 
-import javafx.geometry.Bounds;
-import javafx.scene.control.Tab;
 import javafx.stage.Stage;
 
 import org.dockfx.pane.ContentPane;
@@ -524,10 +515,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         ContentPane pane = (ContentPane) parent;
         pane.removeNode(findStack, node);
 
-        // if there is only 1-tab left, we replace it with the SplitPane
-        if (pane.getChildrenList().size() == 1 &&
+        // if there is 0 children left, make sure we remove the split pane
+        if (pane.getChildrenList().isEmpty()) {
+          if (root == pane) {
+            this.getChildren().remove((Node) pane);
+            root = null;
+          }
+        } else if (pane.getChildrenList().size() == 1 &&
             pane instanceof ContentTabPane &&
             pane.getChildrenList().get(0) instanceof DockNode) {
+          // if there is only 1-tab left, we replace it with the SplitPane
 
           List<Node> children = pane.getChildrenList();
           Node sibling = children.get(0);
@@ -545,8 +542,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
   public void handle(DockEvent event) {
     if (event.getEventType() == DockEvent.DOCK_ENTER) {
       if (!dockIndicatorOverlay.isShowing()) {
-        Point2D originToScreen = root.localToScreen(0, 0);
-
+        Point2D originToScreen;
+        if (null != root) {
+            originToScreen = root.localToScreen(0, 0);
+        }
+        else {
+            originToScreen = this.localToScreen(0, 0);
+        }
+        
         dockIndicatorOverlay
             .show(DockPane.this, originToScreen.getX(), originToScreen.getY());
       }
