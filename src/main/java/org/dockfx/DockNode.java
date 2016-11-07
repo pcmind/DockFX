@@ -317,12 +317,12 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * @param translation null The offset of the node after being set floating. Used for aligning it
    *        with its layout bounds inside the dock pane when it becomes detached. Can be null
    *        indicating no translation.
-   * @param newDockPane the parent Dock Pane to associate with if not already set
+   * @param parentDockPane the parent Dock Pane to associate with if not already set
    */
-  public void setFloating(boolean floating, Point2D translation, DockPane newDockPane) {
+  public void setFloating(boolean floating, Point2D translation, DockPane parentDockPane) {
     if (floating && !this.isFloating()) {
       if (null == dockPane) {
-        dockPane = newDockPane;
+        dockPane = parentDockPane;
       }
 
       // position the new stage relative to the old scene offset
@@ -401,13 +401,12 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       Insets insetsDelta = borderPane.getInsets();
 
       double insetsWidth = insetsDelta.getLeft() + insetsDelta.getRight();
-      double insetsHeight = insetsDelta.getTop() + insetsDelta.getBottom();
 
       stage.setScene(scene);
 
       stage.setMinWidth(borderPane.minWidth(this.getMinWidth()) + insetsWidth);
-      stage.setMinHeight(borderPane.minHeight(this.getMinHeight()) + insetsHeight);
-      borderPane.setPrefSize(this.getPrefWidth() + insetsWidth, this.getPrefHeight() + insetsHeight);
+      stage.setMinHeight(borderPane.minHeight(this.getMinHeight()));
+      borderPane.setPrefSize(this.getPrefWidth() + insetsWidth, this.getPrefHeight());
 
       if (translateToCenter) {
         // we are floating over the center of some parent, therefore align our center with theirs
