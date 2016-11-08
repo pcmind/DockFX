@@ -44,21 +44,37 @@ import org.dockfx.pane.DockNodeTab;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
+import javafx.stage.Screen;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import javafx.util.Duration;
 
 /**
@@ -69,11 +85,27 @@ import javafx.util.Duration;
  * @since DockFX 0.1
  */
 public class DockPane extends StackPane implements EventHandler<DockEvent> {
+  /**
+   * The style this dock node should use on its stage when set to floating.
+   */
+  private StageStyle stageStyle = StageStyle.TRANSPARENT;
+  /**
+   * The stage that this dock node is currently using when floating.
+   */
+  private Stage stage;
+  /**
+   * The title bar that implements our dragging and state manipulation.
+   */
+  private DockPaneTitleBar dockTitleBar;
+  /**
+   * The border pane used when floating to provide a styled custom border.
+   */
+  private final BorderPane borderPane;
 
   /**
    * The current root node of this dock pane's layout.
    */
-  private Node root;
+  private Control root;
 
   /**
    * Whether a DOCK_ENTER event has been received by this dock pane since the last DOCK_EXIT event
@@ -121,6 +153,126 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    */
   private Popup dockIndicatorPopup;
 
+  /**
+   * CSS pseudo class selector representing whether this node is currently floating.
+   */
+  private static final PseudoClass FLOATING_PSEUDO_CLASS = PseudoClass.getPseudoClass("floating");
+  /**
+   * CSS pseudo class selector representing whether this node is currently docked.
+   */
+  private static final PseudoClass DOCKED_PSEUDO_CLASS = PseudoClass.getPseudoClass("docked");
+  /**
+   * CSS pseudo class selector representing whether this node is currently maximized.
+   */
+  private static final PseudoClass MAXIMIZED_PSEUDO_CLASS = PseudoClass.getPseudoClass("maximized");
+
+  /**
+   * Boolean property maintaining whether this node is currently maximized.
+   * 
+   * @defaultValue false
+   */
+  private BooleanProperty maximizedProperty = new SimpleBooleanProperty(false) {
+
+    @Override
+    protected void invalidated() {
+      DockPane.this.pseudoClassStateChanged(MAXIMIZED_PSEUDO_CLASS, get());
+      if (borderPane != null) {
+        borderPane.pseudoClassStateChanged(MAXIMIZED_PSEUDO_CLASS, get());
+      }
+
+      stage.setMaximized(get());
+
+      // TODO: This is a work around to fill the screen bounds and not overlap the task bar when 
+      // the window is undecorated as in Visual Studio. A similar work around needs applied for 
+      // JFrame in Swing. http://bugs.java.com/bugdatabase/view_bug.do?bug_id=4737788
+      // Bug report filed:
+      // https://bugs.openjdk.java.net/browse/JDK-8133330
+      if (this.get()) {
+        Screen screen = Screen
+            .getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight())
+            .get(0);
+        Rectangle2D bounds = screen.getVisualBounds();
+
+        stage.setX(bounds.getMinX());
+        stage.setY(bounds.getMinY());
+
+        stage.setWidth(bounds.getWidth());
+        stage.setHeight(bounds.getHeight());
+      }
+    }
+
+    @Override
+    public String getName() {
+      return "maximized";
+    }
+  };
+
+  /**
+   * Whether the pane is currently maximized.
+   * 
+   * @param maximized Whether the pane is currently maximized.
+   */
+  public final void setMaximized(boolean maximized) {
+    maximizedProperty.set(maximized);
+  }
+
+  public final BooleanProperty maximizedProperty() {
+    return maximizedProperty;
+  }
+
+  public final boolean isMaximized() {
+    return maximizedProperty.get();
+  }
+
+  /**
+   * Object property maintaining bidirectional state of the caption graphic for this node with the
+   * dock title bar or stage.
+   * 
+   * @defaultValue null
+   */
+  public final ObjectProperty<Node> graphicProperty() {
+    return graphicProperty;
+  }
+
+  private ObjectProperty<Node> graphicProperty = new SimpleObjectProperty<Node>() {
+    @Override
+    public String getName() {
+      return "graphic";
+    }
+  };
+
+  public final Node getGraphic() {
+    return graphicProperty.get();
+  }
+
+  public final void setGraphic(Node graphic) {
+    this.graphicProperty.setValue(graphic);
+  }
+
+  /**
+   * Boolean property maintaining bidirectional state of the caption title for this node with the
+   * dock title bar or stage.
+   * 
+   * @defaultValue "Dock"
+   */
+  public final StringProperty titleProperty() {
+    return titleProperty;
+  }
+
+  private StringProperty titleProperty = new SimpleStringProperty("Dock Title Bar") {
+    @Override
+    public String getName() {
+      return "title";
+    }
+  };
+
+  public final String getTitle() {
+    return titleProperty.get();
+  }
+
+  public final void setTitle(String title) {
+    this.titleProperty.setValue(title);
+  }
 
   /**
    * Base class for a dock indicator button that allows it to be displayed during a dock event and
@@ -203,6 +355,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * overlays.
    */
   public DockPane() {
+    this(false);
+  }
+  
+  protected DockPane(boolean floating) {
     super();
 
     this.addEventHandler(DockEvent.ANY, this);
@@ -296,6 +452,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     dockAreaIndicator.getStyleClass().add("dock-area-indicator");
 
     undockedNodes = FXCollections.observableArrayList();
+
+    borderPane = new BorderPane();
+    borderPane.getStyleClass().add("dock-node-border");
+    dockTitleBar = new DockPaneTitleBar(this);
+    borderPane.setTop(dockTitleBar);
   }
 
   /**
@@ -307,6 +468,72 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    */
   public final Timeline getDockAreaStrokeTimeline() {
     return dockAreaStrokeTimeline;
+  }
+
+  /**
+   * The stage style that will be used when the dock node is floating. This must be set prior to
+   * setting the dock node to floating.
+   * 
+   * @param stageStyle The stage style that will be used when the node is floating.
+   */
+  public void setStageStyle(StageStyle stageStyle) {
+    this.stageStyle = stageStyle;
+  }
+
+  public StageStyle getStageStyle() {
+    return this.stageStyle;
+  }
+
+  public void close() {
+    this.stage.close();
+  }
+  
+  /**
+   * The stage associated with this dock pane. Can be null if the dock pane was never set to
+   * floating.
+   * 
+   * @return The stage associated with this pane.
+   */
+  public final Stage getStage() {
+    return stage;
+  }
+
+  /**
+   * The border pane used to parent this dock pane when floating. Can be null if the dock pane was
+   * never set to floating.
+   * 
+   * @return The border pane associated with this pane.
+   */
+  public final BorderPane getBorderPane() {
+    return borderPane;
+  }
+
+  /**
+   * Boolean property maintaining whether this node is currently floating.
+   * 
+   * @defaultValue false
+   */
+  public final BooleanProperty floatingProperty() {
+    return floatingProperty;
+  }
+
+  private BooleanProperty floatingProperty = new SimpleBooleanProperty(false) {
+    @Override
+    protected void invalidated() {
+      DockPane.this.pseudoClassStateChanged(FLOATING_PSEUDO_CLASS, get());
+      if (borderPane != null) {
+        borderPane.pseudoClassStateChanged(FLOATING_PSEUDO_CLASS, get());
+      }
+    }
+
+    @Override
+    public String getName() {
+      return "floating";
+    }
+  };
+
+  public final boolean isFloating() {
+    return floatingProperty.get();
   }
 
   /**
@@ -326,6 +553,170 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         .addUserAgentStylesheet(DockPane.class.getResource("default.css").toExternalForm());
   }
 
+  /**
+   * Boolean property maintaining whether this node is currently resizable.
+   * 
+   * @defaultValue true
+   */
+  public final BooleanProperty resizableProperty() {
+    return stageResizableProperty;
+  }
+
+  private BooleanProperty stageResizableProperty = new SimpleBooleanProperty(true) {
+    @Override
+    public String getName() {
+      return "resizable";
+    }
+  };
+
+  public final boolean isStageResizable() {
+    return stageResizableProperty.get();
+  }
+
+  public final void setStageResizable(boolean resizable) {
+    stageResizableProperty.set(resizable);
+  }
+
+  public final boolean isOnlyChild(DockNode node) {
+    return null != root
+            && (root instanceof ContentSplitPane)
+            && 1 == ((ContentSplitPane)root).getChildrenList().size()
+            && ((ContentSplitPane)root).getChildrenList().contains(node);
+  }
+
+  public final DockNode getOnlyChild() {
+    return (null != root
+            && (root instanceof ContentSplitPane)
+            && 1 == ((ContentSplitPane)root).getChildrenList().size())
+            ? (DockNode)((ContentSplitPane)root).getChildrenList().get(0) : null;
+  }
+          
+  /**
+   * Whether the node is currently floating.
+   * 
+   * @param floating Whether the node is currently floating.
+   * @param translation null The offset of the node after being set floating. Used for aligning it
+   *        with its layout bounds inside the dock pane when it becomes detached. Can be null
+   *        indicating no translation.
+   */
+  public void setFloating(DockNode node, boolean floating, Point2D translation, DockPane parentDockPane) {
+    if (floating) {
+      // position the new stage relative to the old scene offset
+      Point2D floatScene = this.localToScene(0, 0);
+      Point2D floatScreen = this.localToScreen(0, 0);
+
+      // setup window stage
+      dockTitleBar.setVisible(node.isCustomTitleBar());
+      dockTitleBar.setManaged(node.isCustomTitleBar());
+
+      stage = new Stage();
+      stage.titleProperty().bind(node.titleProperty());
+      if (parentDockPane != null && parentDockPane.getScene() != null
+          && parentDockPane.getScene().getWindow() != null) {
+        stage.initOwner(parentDockPane.getScene().getWindow());
+      }
+
+      stage.initStyle(stageStyle);
+
+      // offset the new stage to cover exactly the area the dock was local to the scene
+      // this is useful for when the user presses the + sign and we have no information
+      // on where the mouse was clicked
+      Point2D stagePosition;
+      boolean translateToCenter = false;
+      if (node.isDecorated()) {
+        Window owner = stage.getOwner();
+        stagePosition = floatScene.add(new Point2D(owner.getX(), owner.getY()));
+      } else if (floatScreen != null) {
+		  // using coordinates the component was previously in (if available)
+		  stagePosition = floatScreen;
+	  } else {
+            translateToCenter = true;
+
+            if (null != parentDockPane) {
+              Window rootWindow = parentDockPane.getScene().getWindow();
+              double centerX = rootWindow.getX() + (rootWindow.getWidth() / 2);
+              double centerY = rootWindow.getY() + (rootWindow.getHeight() / 2);
+              stagePosition = new Point2D(centerX, centerY);
+            }
+            else {
+              // using the center of the screen if no relative position is available
+              Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
+              double centerX = (primScreenBounds.getWidth() - Math.max(getWidth(), getMinWidth())) / 2;
+              double centerY = (primScreenBounds.getHeight() - Math.max(getHeight(), getMinHeight())) / 2;
+              stagePosition = new Point2D(centerX, centerY);
+            }
+	  }
+
+      if (translation != null) {
+        stagePosition = stagePosition.add(translation);
+      }
+
+      // the border pane allows the dock node to
+      // have a drop shadow effect on the border
+      // but also maintain the layout of contents
+      // such as a tab that has no content
+      borderPane.setCenter(this);
+
+      Scene scene = new Scene(borderPane);
+
+      // apply the floating property so we can get its padding size
+      // while it is floating to offset it by the drop shadow
+      // this way it pops out above exactly where it was when docked
+      this.floatingProperty.set(floating);
+      this.applyCss();
+
+      // apply the border pane css so that we can get the insets and
+      // position the stage properly
+      borderPane.applyCss();
+      Insets insetsDelta = borderPane.getInsets();
+
+      double insetsWidth = insetsDelta.getLeft() + insetsDelta.getRight();
+
+      stage.setScene(scene);
+
+      stage.setMinWidth(borderPane.minWidth(this.getMinWidth()) + insetsWidth);
+      stage.setMinHeight(borderPane.minHeight(this.getMinHeight()));
+      borderPane.setPrefSize(node.getPrefWidth() + insetsWidth, node.getPrefHeight());
+
+      if (translateToCenter) {
+        // we are floating over the center of some parent, therefore align our center with theirs
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft() - (borderPane.getPrefWidth()/2.0));
+        stage.setY(stagePosition.getY() - insetsDelta.getTop() - (borderPane.getPrefHeight()/2.0));
+      } else {
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft());
+        stage.setY(stagePosition.getY() - insetsDelta.getTop());
+      }
+      
+      if (stageStyle == StageStyle.TRANSPARENT) {
+        scene.setFill(null);
+      }
+
+      stage.setResizable(this.isStageResizable());
+      if (this.isStageResizable()) {
+        stage.addEventFilter(MouseEvent.MOUSE_PRESSED, this::handleMouseEvent);
+        stage.addEventFilter(MouseEvent.MOUSE_MOVED, this::handleMouseEvent);
+        stage.addEventFilter(MouseEvent.MOUSE_DRAGGED, this::handleMouseEvent);
+      }
+
+      // we want to set the client area size
+      // without this it subtracts the native border sizes from the scene
+      // size
+      stage.sizeToScene();
+
+      layout();
+      
+      stage.show();
+    } else if (!floating && isFloating()) {
+      this.floatingProperty.set(floating);
+
+      stage.removeEventFilter(MouseEvent.MOUSE_PRESSED, this::handleMouseEvent);
+      stage.removeEventFilter(MouseEvent.MOUSE_MOVED, this::handleMouseEvent);
+      stage.removeEventFilter(MouseEvent.MOUSE_DRAGGED, this::handleMouseEvent);
+
+      stage.close();
+    }
+  }
+  
   /**
    * A cache of all dock node event handlers that we have created for tracking the current docking
    * area.
@@ -373,7 +764,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * @param dockPos The docking position of the node relative to the sibling.
    * @param sibling The sibling of this node in the layout.
    */
-  void dock(Node node, DockPos dockPos, Node sibling) {
+  void floatNode(DockNode node) {
     DockNodeEventHandler dockNodeEventHandler = new DockNodeEventHandler(node);
     dockNodeEventFilters.put(node, dockNodeEventHandler);
     node.addEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
@@ -381,7 +772,33 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     ContentPane pane = (ContentPane) root;
     if (pane == null) {
       pane = new ContentSplitPane(node);
-      root = (Node) pane;
+      root = (Control) pane;
+      this.getChildren().add(root);
+    }
+    
+    // link out title bar text and graphic to the nodes as there is only a single
+    dockTitleBar.mirrorNodeTitleBar(node);
+    node.showTitleBar(false);
+  }
+
+  void dock(DockNode node, DockPos dockPos, Node sibling) {
+    DockNodeEventHandler dockNodeEventHandler = new DockNodeEventHandler(node);
+    dockNodeEventFilters.put(node, dockNodeEventHandler);
+    node.addEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
+
+    // if we already only have a single child and are floating then we need to switch on its titlebar
+    if (isFloating()) {
+      DockNode onlyChild = getOnlyChild();
+      if (null != onlyChild) {
+        onlyChild.showTitleBar(true);
+        dockTitleBar.mirrorNodeTitleBar(null);
+      }
+    }
+      
+    ContentPane pane = (ContentPane) root;
+    if (pane == null) {
+      pane = new ContentSplitPane(node);
+      root = (Control) pane;
       this.getChildren().add(root);
       return;
     }
@@ -477,6 +894,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     if (undockedNodes.contains(node)) {
       undockedNodes.remove(node);
     }
+    
+    // show the title bar if we are not floating or they are not our only child
+    node.showTitleBar(!isFloating() || !isOnlyChild(node));
+    
+    if (isFloating()) {
+      DockNode onlyChild = getOnlyChild();
+      if (null != onlyChild) {
+        dockTitleBar.mirrorNodeTitleBar(onlyChild);
+      }
+    }
   }
 
   /**
@@ -487,7 +914,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * @param node    The node that is to be docked into this dock pane.
    * @param dockPos The docking position of the node relative to the sibling.
    */
-  void dock(Node node, DockPos dockPos) {
+  void dock(DockNode node, DockPos dockPos) {
     dock(node, dockPos, root);
   }
 
@@ -501,8 +928,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       undockedNodes.add(node);
 
     DockNodeEventHandler dockNodeEventHandler = dockNodeEventFilters.get(node);
-    node.removeEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
-    dockNodeEventFilters.remove(node);
+    if(null != dockNodeEventHandler) {
+      node.removeEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
+      dockNodeEventFilters.remove(node);
+    }
 
     // depth first search to find the parent of the node
     Stack<Parent> findStack = new Stack<Parent>();
@@ -535,7 +964,15 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
       }
     }
-
+    
+    // is there only a single child left then hide its bar
+    if (isFloating()) {
+      DockNode onlyChild = getOnlyChild();
+      if (null != onlyChild) {
+        onlyChild.showTitleBar(false);
+        dockTitleBar.mirrorNodeTitleBar(onlyChild);
+      }
+    }
   }
 
   @Override
@@ -629,7 +1066,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
     if (event.getEventType() == DockEvent.DOCK_RELEASED && event.getContents() != null) {
       if (dockPosDrag != null && dockIndicatorOverlay.isShowing()) {
-        DockNode dockNode = (DockNode) event.getContents();
+        DockNode dockNode = ((DockPane) event.getContents()).getOnlyChild();
         dockNode.dock(this, dockPosDrag, dockAreaDrag);
       }
     }
@@ -842,14 +1279,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     // Restore dock location based on the preferences
     // Make it sorted
     ContentHolder rootHolder = contents.get("0");
-    Node newRoot = buildPane(rootHolder, dockNodes, delayOpenHandler);
+    Control newRoot = buildPane(rootHolder, dockNodes, delayOpenHandler);
 
     this.root = newRoot;
     this.getChildren().set(0, this.root);
   }
 
-  private Node buildPane(ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
-    Node pane = null;
+  private Control buildPane(ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
+    Control pane = null;
     if (holder.getType().equals(ContentHolder.Type.SplitPane)) {
       ContentSplitPane splitPane = new ContentSplitPane();
       splitPane.setOrientation((Orientation) holder.getProperties().get("Orientation"));
@@ -875,7 +1312,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 newNode.tabbedProperty().set(false);
               }
 
-              newNode.dockedProperty().set(true);
+//              newNode.dockedProperty().set(true);
               splitPane.getItems().add(newNode);
             } else
               System.err.println(item + " is not present.");
@@ -902,7 +1339,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             if(null != delayOpenHandler)
             {
               DockNode newNode = delayOpenHandler.open((String) item);
-              newNode.dockedProperty().set(true);
+//              newNode.dockedProperty().set(true);
               tabPane.addDockNodeTab(new DockNodeTab(newNode));
             }
             else
@@ -916,5 +1353,112 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     return pane;
+  }
+
+  /**
+   * The last position of the mouse that was within the minimum layout bounds.
+   */
+  private Point2D sizeLast;
+  /**
+   * Whether we are currently resizing in a given direction.
+   */
+  private boolean sizeWest = false, sizeEast = false, sizeNorth = false, sizeSouth = false;
+
+  /**
+   * Gets whether the mouse is currently in this dock node's resize zone.
+   * 
+   * @return Whether the mouse is currently in this dock node's resize zone.
+   */
+  public boolean isMouseResizeZone() {
+    return sizeWest || sizeEast || sizeNorth || sizeSouth;
+  }
+
+  public void handleMouseEvent(MouseEvent event) {
+    Cursor cursor = Cursor.DEFAULT;
+
+    // TODO: use escape to cancel resize/drag operation like visual studio
+    if (!this.isFloating() || !this.isStageResizable()) {
+      return;
+    }
+
+    if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+      sizeLast = new Point2D(event.getScreenX(), event.getScreenY());
+    } else if (event.getEventType() == MouseEvent.MOUSE_MOVED) {
+      Insets insets = borderPane.getPadding();
+
+      sizeWest = event.getX() < insets.getLeft();
+      sizeEast = event.getX() > borderPane.getWidth() - insets.getRight();
+      sizeNorth = event.getY() < insets.getTop();
+      sizeSouth = event.getY() > borderPane.getHeight() - insets.getBottom();
+
+      if (sizeWest) {
+        if (sizeNorth) {
+          cursor = Cursor.NW_RESIZE;
+        } else if (sizeSouth) {
+          cursor = Cursor.SW_RESIZE;
+        } else {
+          cursor = Cursor.W_RESIZE;
+        }
+      } else if (sizeEast) {
+        if (sizeNorth) {
+          cursor = Cursor.NE_RESIZE;
+        } else if (sizeSouth) {
+          cursor = Cursor.SE_RESIZE;
+        } else {
+          cursor = Cursor.E_RESIZE;
+        }
+      } else if (sizeNorth) {
+        cursor = Cursor.N_RESIZE;
+      } else if (sizeSouth) {
+        cursor = Cursor.S_RESIZE;
+      }
+
+      this.getScene().setCursor(cursor);
+    } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED && this.isMouseResizeZone()) {
+      Point2D sizeCurrent = new Point2D(event.getScreenX(), event.getScreenY());
+      Point2D sizeDelta = sizeCurrent.subtract(sizeLast);
+
+      double newX = stage.getX(), newY = stage.getY(), newWidth = stage.getWidth(),
+          newHeight = stage.getHeight();
+
+      if (sizeNorth) {
+        newHeight -= sizeDelta.getY();
+        newY += sizeDelta.getY();
+      } else if (sizeSouth) {
+        newHeight += sizeDelta.getY();
+      }
+
+      if (sizeWest) {
+        newWidth -= sizeDelta.getX();
+        newX += sizeDelta.getX();
+      } else if (sizeEast) {
+        newWidth += sizeDelta.getX();
+      }
+
+      // TODO: find a way to do this synchronously and eliminate the flickering of moving the stage
+      // around, also file a bug report for this feature if a work around can not be found this
+      // primarily occurs when dragging north/west but it also appears in native windows and Visual
+      // Studio, so not that big of a concern.
+      // Bug report filed:
+      // https://bugs.openjdk.java.net/browse/JDK-8133332
+      double currentX = sizeLast.getX(), currentY = sizeLast.getY();
+      if (newWidth >= stage.getMinWidth()) {
+        stage.setX(newX);
+        stage.setWidth(newWidth);
+        currentX = sizeCurrent.getX();
+      }
+
+      if (newHeight >= stage.getMinHeight()) {
+        stage.setY(newY);
+        stage.setHeight(newHeight);
+        currentY = sizeCurrent.getY();
+      }
+      sizeLast = new Point2D(currentX, currentY);
+      // we do not want the title bar getting these events
+      // while we are actively resizing
+      if (sizeNorth || sizeSouth || sizeWest || sizeEast) {
+        event.consume();
+      }
+    }
   }
 }
