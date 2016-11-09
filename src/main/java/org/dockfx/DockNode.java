@@ -65,8 +65,23 @@ public class DockNode extends VBox {
    */
   private DockFXViewController viewController;
 
-  public DockNode(Node contents, String title, Node graphic, DockFXViewController controller) {
-    initializeDockNode(contents, title, graphic, controller);
+  public DockNode(Node contents, String title, Node graphic, String identity, DockFXViewController controller) {
+    initializeDockNode(contents, title, graphic, identity, controller);
+  }
+
+  /**
+   * Creates a default DockNode with a default title bar and layout.
+   * 
+   * @param contents The contents of the dock node which may be a tree or another scene graph node.
+   * @param title The caption title of this dock node which maintains bidirectional state with the
+   *        title bar and stage.
+   * @param graphic The caption graphic of this dock node which maintains bidirectional state with
+   *        the title bar and stage.
+   * @param identity The identity of this dock node, if null then it will bind to the title
+   * property.
+   */
+  public DockNode(Node contents, String title, Node graphic, String identity) {
+    this(contents, title, graphic, null, null);
   }
 
   /**
@@ -111,10 +126,26 @@ public class DockNode extends VBox {
    * title bar and stage.
    * @param graphic The caption title of this dock node which maintains bidirectional state with the
    * title bar and stage.
+   * @param identity The identity of this dock node, if null then it will bind to the title
+   * property.
+   */
+  public DockNode(String FXMLPath, String title, Node graphic, String identity) {
+    FXMLLoader loader = loadNode(FXMLPath);
+    initializeDockNode(loader.getRoot(), title, graphic, identity, loader.getController());
+  }
+
+  /**
+   *
+   * Creates a default DockNode with contents loaded from FXMLFile at provided path.
+   *
+   * @param FXMLPath path to fxml file.
+   * @param title The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   * @param graphic The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
    */
   public DockNode(String FXMLPath, String title, Node graphic) {
-    FXMLLoader loader = loadNode(FXMLPath);
-    initializeDockNode(loader.getRoot(), title, graphic, loader.getController());
+    this(FXMLPath, title, graphic, null);
   }
 
   /**
@@ -162,16 +193,25 @@ public class DockNode extends VBox {
    * @param contents The contents of the dock node which may be a tree or another scene graph node.
    * @param title The caption title of this dock node which maintains bidirectional state with the
    * title bar and stage.
+   * @param identity The identity of this dock node, if null then it will bind to the title
+   * property.
    * @param graphic The caption title of this dock node which maintains bidirectional state with the
    * title bar and stage.
    */
-  private void initializeDockNode(Node contents, String title, Node graphic, DockFXViewController controller) {
+  private void initializeDockNode(Node contents, String title, Node graphic, String identity, DockFXViewController controller) {
     this.dockPane = new DockPane();
     this.titleProperty.setValue(title);
     this.graphicProperty.setValue(graphic);
     this.contents = contents;
     this.viewController = controller;
 
+    if (null == identity) {
+      this.identityProperty.bind(titleProperty);
+    }
+    else {
+      this.identityProperty.set(identity);
+    }
+    
     dockTitleBar = new DockNodeTitleBar(this);
     if (viewController != null) {
       viewController.setDockTitleBar(dockTitleBar);
@@ -245,10 +285,10 @@ public class DockNode extends VBox {
         }
         
         // need a new DockPane to contain us
-        dockPane = new DockPane(true);
+        dockPane = new DockPane(parentDockPane, parentDockPane.getStage());
 
         dockPane.floatNode(this);
-        dockPane.setFloating(this, true, translation, parentDockPane);
+        dockPane.setFloating(this, translation, false);
       }
     } else if (!floating && dockPane.isFloating()) {
         undock();
@@ -332,7 +372,7 @@ public class DockNode extends VBox {
   }
 
   /**
-   * Boolean property maintaining bidirectional state of the caption title for this node with the
+   * String property maintaining bidirectional state of the caption title for this node with the
    * dock title bar or stage.
    * 
    * @defaultValue "Dock"
@@ -354,6 +394,37 @@ public class DockNode extends VBox {
 
   public final void setTitle(String title) {
     this.titleProperty.setValue(title);
+  }
+
+  /**
+   * String property maintaining bidirectional state of the caption title for this node with the
+   * dock title bar or stage.
+   * 
+   * @defaultValue "Dock"
+   */
+  public final StringProperty identityProperty() {
+    return identityProperty;
+  }
+
+  private StringProperty identityProperty = new SimpleStringProperty("Dock") {
+    @Override
+    public String getName() {
+      return "identity";
+    }
+  };
+
+  public final String getIdentity() {
+    return identityProperty.get();
+  }
+
+  public final void setIdentity(String id) {
+    if (null == id) {
+      this.identityProperty.setValue(titleProperty.get());
+      this.identityProperty.bind(titleProperty);
+    } else {
+      this.identityProperty.unbind();
+      this.identityProperty.setValue(id);
+    }
   }
 
   /**
