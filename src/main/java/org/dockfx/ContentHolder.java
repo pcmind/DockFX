@@ -36,10 +36,10 @@ public class ContentHolder
 		DockNode
 	}
 
-	String name;
-	Properties properties;
-	LinkedList children;
-	Type type;
+	private String name;
+	private Properties properties = new Properties();
+	private LinkedList children = new LinkedList();
+	private Type type;
 
 	public ContentHolder()
 	{
@@ -49,8 +49,6 @@ public class ContentHolder
 	public ContentHolder( String name, Type type )
 	{
 		this.name = name;
-		this.properties = new Properties();
-		this.children = new LinkedList();
 		this.type = type;
 	}
 

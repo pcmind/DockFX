@@ -28,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
@@ -606,6 +605,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     return (null != root
             && (root instanceof ContentSplitPane)
             && 1 == ((ContentSplitPane)root).getChildrenList().size())
+            && ((ContentSplitPane)root).getChildrenList().get(0) instanceof DockNode
             ? (DockNode)((ContentSplitPane)root).getChildrenList().get(0) : null;
   }
           
@@ -1105,17 +1105,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     for (DockPane floatingPane : floatingDockPanes) {
       ContentHolder floatingNode = checkDockPane(contents, floatingPane, count);
       floatingNode.addProperty("Title", floatingPane.getTitle());
-      floatingNode.addProperty("Size", new Double[]{
-          floatingPane.getLayoutBounds().getWidth(),
-          floatingPane.getLayoutBounds().getHeight()
-      });
-
-      Point2D loc =
-          floatingPane.localToScreen(floatingPane.getLayoutBounds().getMinX(),
-                                             floatingPane.getLayoutBounds().getMinY());
 
       floatingNode.addProperty("Position", new Double[]{
-          loc.getX(), loc.getY()
+          floatingPane.getStage().getX(),
+          floatingPane.getStage().getY()
       });
 
       floatingContent.addChild(floatingNode);
@@ -1138,12 +1131,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
   private static ContentHolder checkDockPane(HashMap<String, ContentHolder> contents, DockPane dockPane,
                                   Integer count) {
-    ContentPane pane = (ContentPane) dockPane.root;
-    
-    return checkPane(contents, pane, count);
+    return checkPane(contents, dockPane.root, count);
   }
   
-  private static ContentHolder checkPane(HashMap<String, ContentHolder> contents, ContentPane pane,
+  private static ContentHolder checkPane(HashMap<String, ContentHolder> contents, Node pane,
                                   Integer count) {
     ContentHolder holder = null;
     if (pane instanceof ContentSplitPane) {
@@ -1163,14 +1154,24 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       contents.put(contentTabPaneName, holder);
 
       holder.addProperty("SelectedIndex", tabPane.getSelectionModel().getSelectedIndex());
-    }
+    } else if (pane instanceof DockNode) {
+      final String contentTabNodeName = String.valueOf(count++);
+      DockNode nd = (DockNode) pane;
 
-    if (null != holder) {
-      for (Node node : pane.getChildrenList()) {
-        if (node instanceof DockNode) {
-          holder.addChild(((DockNode) node).getIdentity());
-        } else if (node instanceof ContentPane) {
-          holder.addChild(checkPane(contents, (ContentPane) node, count));
+      holder = new ContentHolder(contentTabNodeName, ContentHolder.Type.DockNode);
+      contents.put(contentTabNodeName, holder);
+      
+      holder.addProperty("Title", nd.getIdentity());
+      holder.addProperty("Size", new Double[]{
+          nd.getWidth(),
+          nd.getHeight()
+      });
+    }
+    
+    if ((null != holder) && (pane instanceof ContentPane)) {
+      for (Node node : ((ContentPane) pane).getChildrenList()) {
+        if ((node instanceof ContentPane) || (node instanceof DockNode)){
+          holder.addChild(checkPane(contents, node, count));
         }
       }
     }
@@ -1178,27 +1179,29 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     return holder;
   }
 
-  public void loadPreference(String filePath) {
+  public void loadPreference(String filePath) throws FileNotFoundException {
     loadPreference(filePath, null);
   }
 
-  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler)
+  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) throws FileNotFoundException
   {
     HashMap<String, ContentHolder>
         contents =
         (HashMap<String, ContentHolder>) loadCollection(filePath);
 
-    applyPane(contents, (ContentPane) root, delayOpenHandler);
+    if (null != contents) {
+      applyPane(contents, (ContentPane) root, delayOpenHandler);
+    }
   }
 
-  private Object loadCollection(String fileName) {
+  private Object loadCollection(String fileName) throws FileNotFoundException{
     try (XMLDecoder e = new XMLDecoder(
             new BufferedInputStream(
                     new FileInputStream(fileName)))) {
 
       return e.readObject();
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      // emprt file
     }
 
     return null;
@@ -1233,47 +1236,78 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         ContentHolder holder = (ContentHolder) item;
 
         DockPane floatingPane = new DockPane(this, this.stage);
-        Control newRoot = buildPane(this, floatingPane, holder, dockNodes, delayOpenHandler);
+        Control newRoot = (Control)buildPane(this, floatingPane, holder, dockNodes, delayOpenHandler);
 
         floatingPane.root = newRoot;
         floatingPane.getChildren().add(newRoot);
 
         String title = holder.getProperties().getProperty("Title");
-        Double[] size = (Double[]) holder.getProperties().get("Size");
         Double[] position = (Double[]) holder.getProperties().get("Position");
         floatingPane.setTitle(title);
 
+        DockNode onlyChild = floatingPane.getOnlyChild();
+        if (null != onlyChild) {
+          floatingPane.floatNode(onlyChild);
+        }
         floatingPane.setFloating(newRoot, new Point2D(position[0], position[1]), true);
-
-	floatingPane.getStage().setWidth(size[0]);
-        floatingPane.getStage().setHeight(size[1]);
     }
 
     // Restore dock location based on the preferences
     // Make it sorted
     ContentHolder rootHolder = contents.get("0");
-    Control newRoot = buildPane(this, this, rootHolder, dockNodes, delayOpenHandler);
+    
+    if (null != rootHolder) {
+      Node newRoot = buildPane(this, this, rootHolder, dockNodes, delayOpenHandler);
 
-    this.root = newRoot;
-    this.getChildren().add(this.root);
+      this.root = (Control)newRoot;
+      this.getChildren().add(this.root);
+    }
   }
 
-  private static Control buildPane(DockPane oldPane, DockPane newPane, ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
-    Control pane = null;
-    if (holder.getType().equals(ContentHolder.Type.SplitPane)) {
-      ContentSplitPane splitPane = new ContentSplitPane();
-      splitPane.setOrientation((Orientation) holder.getProperties().get("Orientation"));
-      splitPane.setDividerPositions((double[]) holder.getProperties().get("DividerPositions"));
+  private static Node buildPane(DockPane oldPane, DockPane newPane, ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
+    Node rv = null;
+    
+    switch (holder.getType())
+    {
+      case SplitPane:
+      {
+        ContentSplitPane splitPane = new ContentSplitPane();
+        splitPane.setOrientation((Orientation) holder.getProperties().get("Orientation"));
+        splitPane.setDividerPositions((double[]) holder.getProperties().get("DividerPositions"));
 
-      for (Object item : holder.getChildren()) {
-        if (item instanceof String) {
-          String strItem = (String)item;
+        for (Object item : holder.getChildren()) {
+            // Call this function recursively
+            splitPane.getItems().add(buildPane(oldPane, newPane, (ContentHolder) item, dockNodes, delayOpenHandler));
+        }
 
-          DockNode n = dockNodes.get(strItem);
-          
+        rv = splitPane;
+      }
+      break;
+      case TabPane:
+      {
+        ContentTabPane tabPane = new ContentTabPane();
+
+        for (Object item : holder.getChildren()) {
+            Node n = buildPane(oldPane, newPane, (ContentHolder) item, dockNodes, delayOpenHandler);
+            
+            if (n instanceof DockNode) {
+              tabPane.addDockNodeTab(new DockNodeTab((DockNode)n));
+            }
+        }
+
+        tabPane.getSelectionModel().select((int) holder.getProperties().get("SelectedIndex"));
+        rv = tabPane;
+      }
+      break;
+      case DockNode:
+      {
+          String name = holder.getProperties().getProperty("Title");
+          Double[] size = (Double[]) holder.getProperties().get("Size");
+          DockNode n = dockNodes.get(name);
+
           if ((null == n) && (null != delayOpenHandler)) {
               // If delayOpenHandler is provided, we call it
-              n = delayOpenHandler.open(strItem);
+              n = delayOpenHandler.open(name, size[0], size[1]);
           }
 
           // Use dock node
@@ -1285,50 +1319,21 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             if (oldPane != newPane) {
               oldPane.undock(n);
             }
-            splitPane.getItems().add(n);
-            dockNodes.remove(strItem);
+
+            n.dock(newPane, DockPos.LEFT);
           }
           else
           {
-              System.err.println(strItem + " is not present.");
+              System.err.println(name + " is not present.");
           }
-        } else if (item instanceof ContentHolder) {
-          // Call this function recursively
-          splitPane.getItems().add(buildPane(oldPane, newPane, (ContentHolder) item, dockNodes, delayOpenHandler));
-        }
+
+          dockNodes.remove(name);
+          rv = n;
       }
-
-      pane = splitPane;
-    } else if (holder.getType().equals(ContentHolder.Type.TabPane)) {
-      ContentTabPane tabPane = new ContentTabPane();
-
-      for (Object item : holder.getChildren()) {
-        if (item instanceof String) {
-          String strItem = (String)item;
-          
-          DockNode n = dockNodes.get(strItem);
-          
-          if ((null == n) && (null != delayOpenHandler)) {
-              // If delayOpenHandler is provided, we call it
-              n = delayOpenHandler.open(strItem);
-          }
-
-          // Use dock node
-          if(null != n) {
-            tabPane.addDockNodeTab(new DockNodeTab(n));
-          }
-          else
-          {
-              System.err.println(item + " is not present.");
-          }
-        }
-      }
-
-      tabPane.getSelectionModel().select((int) holder.getProperties().get("SelectedIndex"));
-      pane = tabPane;
+      break;
     }
 
-    return pane;
+    return rv;
   }
 
   /**
