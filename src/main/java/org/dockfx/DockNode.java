@@ -199,7 +199,6 @@ public class DockNode extends VBox {
    * title bar and stage.
    */
   private void initializeDockNode(Node contents, String title, Node graphic, String identity, DockFXViewController controller) {
-    this.dockPane = new DockPane();
     this.titleProperty.setValue(title);
     this.graphicProperty.setValue(graphic);
     this.contents = contents;
@@ -260,7 +259,7 @@ public class DockNode extends VBox {
   }
   
   public Stage getStage() {
-    return dockPane.getStage();
+    return (null != dockPane) ? dockPane.getStage() : null;
   }
 
   /**
@@ -273,24 +272,26 @@ public class DockNode extends VBox {
    */
   public void setFloating(boolean floating, Point2D translation, DockPane parentDockPane) {
     if (floating) {
-      if (!dockPane.isFloating() || !dockPane.isOnlyChild(this)) {
+      if (dockPane == null || !dockPane.isFloating() || !dockPane.isOnlyChild(this)) {
         // we will be the only child so we don't need to show our title bar
         showTitleBar(false);
 
-        dockPane.undock(this);
+        if (null != dockPane) {
+          dockPane.undock(this);
+        }
         
         // dispose of the old dock pane if it is now empty
-        if (dockPane.isFloating() && dockPane.getChildren().isEmpty()) {
+        if (null != dockPane && dockPane.isFloating() && dockPane.getChildren().isEmpty()) {
           dockPane.close();
         }
         
         // need a new DockPane to contain us
-        dockPane = new DockPane(parentDockPane, parentDockPane.getStage());
+        dockPane = new DockPane(parentDockPane);
 
         dockPane.floatNode(this);
         dockPane.setFloating(this, translation, false);
       }
-    } else if (!floating && dockPane.isFloating()) {
+    } else if (!floating && null != dockPane && dockPane.isFloating()) {
         undock();
         
         // dispose of the old dock pane if it is now empty
@@ -642,8 +643,11 @@ public class DockNode extends VBox {
 	this.lastDockPos = dockPos;
   }
 
+  protected void setDockPane(DockPane newDockPane) {
+    this.dockPane = newDockPane;
+  }
   private final void dockImpl(DockPane newDockPane) {
-    if (dockPane.isFloating()) {
+    if ((dockPane != null) && dockPane.isFloating()) {
       setFloating(false);
     }
     this.dockPane = newDockPane;

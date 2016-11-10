@@ -74,6 +74,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
 import javafx.stage.Screen;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 /**
@@ -355,14 +356,13 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * overlays.
    */
   public DockPane() {
-    this(null, null);
+    this(null);
   }
   
-  protected DockPane(DockPane parentDockPane, Stage stage) {
+  protected DockPane(DockPane parentDockPane) {
     super();
 
     this.parentDockPane = parentDockPane;
-    this.stage = stage;
     
     this.addEventHandler(DockEvent.ANY, this);
     this.addEventFilter(DockEvent.ANY, new EventHandler<DockEvent>() {
@@ -729,11 +729,33 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       // if we a child of the primary stage and its not been shown yet then we must wait before
       // showing ourselves otherwise we will not be a child stage
       if (absolutePosition && parentStage != null && !parentStage.isShowing()) {
-        parentStage.setOnShown((e) -> stage.show());
+        queueOnShow((e) -> stage.show());
       }
       else {
         stage.show();
       }
+  }
+  
+  private final Stack<EventHandler<WindowEvent>> onShowQueue = new Stack<>();
+  private EventHandler<WindowEvent> defaultOnShow;
+  
+  private void queueOnShow(EventHandler<WindowEvent> value)  {
+    if (null != parentDockPane)    {
+      parentDockPane.queueOnShow(value);
+    }
+    else {
+      if (onShowQueue.isEmpty()) {
+        defaultOnShow = stage.getOnShown();
+        stage.setOnShown((e) -> {
+          onShowQueue.forEach((a) -> a.handle(e));
+          if (null != defaultOnShow) {
+            stage.setOnShown(defaultOnShow);
+            defaultOnShow.handle(e);
+          }
+                });
+      }
+      onShowQueue.push(value);
+    }
   }
   
   /**
@@ -1098,12 +1120,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     HashMap<String, ContentHolder> contents = new HashMap<>();
 
     // Floating Nodes collection
-    ContentHolder floatingContent = new ContentHolder("_FloatingNodes", ContentHolder.Type.Collection);
+    ContentHolder floatingContent = new ContentHolder(ContentHolder.Type.Collection);
     contents.put("_FloatingNodes", floatingContent);
 
-    Integer count = 0;
     for (DockPane floatingPane : floatingDockPanes) {
-      ContentHolder floatingNode = checkDockPane(contents, floatingPane, count);
+      ContentHolder floatingNode = checkPane(floatingPane.root);
       floatingNode.addProperty("Title", floatingPane.getTitle());
 
       floatingNode.addProperty("Position", new Double[]{
@@ -1114,8 +1135,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       floatingContent.addChild(floatingNode);
     }
 
-    checkDockPane(contents, this, count);
-
+    if (null != this.root) {
+      contents.put("_DockedNodes", checkPane(this.root));
+    }
     storeCollection(filePath, contents);
   }
 
@@ -1129,37 +1151,25 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
   }
 
-  private static ContentHolder checkDockPane(HashMap<String, ContentHolder> contents, DockPane dockPane,
-                                  Integer count) {
-    return checkPane(contents, dockPane.root, count);
-  }
-  
-  private static ContentHolder checkPane(HashMap<String, ContentHolder> contents, Node pane,
-                                  Integer count) {
+  private static ContentHolder checkPane(Node pane) {
     ContentHolder holder = null;
     if (pane instanceof ContentSplitPane) {
-      final String contentSplitPaneName = String.valueOf(count++);
       ContentSplitPane splitPane = (ContentSplitPane) pane;
 
-      holder = new ContentHolder(contentSplitPaneName, ContentHolder.Type.SplitPane);
-      contents.put(contentSplitPaneName, holder);
+      holder = new ContentHolder(ContentHolder.Type.SplitPane);
 
       holder.addProperty("Orientation", splitPane.getOrientation());
       holder.addProperty("DividerPositions", splitPane.getDividerPositions());
     } else if (pane instanceof ContentTabPane) {
-      final String contentTabPaneName = String.valueOf(count++);
       ContentTabPane tabPane = (ContentTabPane) pane;
 
-      holder = new ContentHolder(contentTabPaneName, ContentHolder.Type.TabPane);
-      contents.put(contentTabPaneName, holder);
+      holder = new ContentHolder(ContentHolder.Type.TabPane);
 
       holder.addProperty("SelectedIndex", tabPane.getSelectionModel().getSelectedIndex());
     } else if (pane instanceof DockNode) {
-      final String contentTabNodeName = String.valueOf(count++);
       DockNode nd = (DockNode) pane;
 
-      holder = new ContentHolder(contentTabNodeName, ContentHolder.Type.DockNode);
-      contents.put(contentTabNodeName, holder);
+      holder = new ContentHolder(ContentHolder.Type.DockNode);
       
       holder.addProperty("Title", nd.getIdentity());
       holder.addProperty("Size", new Double[]{
@@ -1171,7 +1181,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     if ((null != holder) && (pane instanceof ContentPane)) {
       for (Node node : ((ContentPane) pane).getChildrenList()) {
         if ((node instanceof ContentPane) || (node instanceof DockNode)){
-          holder.addChild(checkPane(contents, node, count));
+          holder.addChild(checkPane(node));
         }
       }
     }
@@ -1235,7 +1245,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     for (Object item : contents.get("_FloatingNodes").getChildren()) {
         ContentHolder holder = (ContentHolder) item;
 
-        DockPane floatingPane = new DockPane(this, this.stage);
+        DockPane floatingPane = new DockPane(this);
         Control newRoot = (Control)buildPane(this, floatingPane, holder, dockNodes, delayOpenHandler);
 
         floatingPane.root = newRoot;
@@ -1254,17 +1264,21 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
     // Restore dock location based on the preferences
     // Make it sorted
-    ContentHolder rootHolder = contents.get("0");
+    ContentHolder rootHolder = contents.get("_DockedNodes");
     
     if (null != rootHolder) {
       Node newRoot = buildPane(this, this, rootHolder, dockNodes, delayOpenHandler);
 
-      this.root = (Control)newRoot;
-      this.getChildren().add(this.root);
+      if (null != newRoot) {
+        this.root = (Control)newRoot;
+        this.getChildren().add(this.root);
+      }
     }
   }
 
-  private static Node buildPane(DockPane oldPane, DockPane newPane, ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
+  private static Node buildPane(DockPane oldPane, DockPane newPane,
+          ContentHolder holder, HashMap<String, DockNode> dockNodes,
+          DelayOpenHandler delayOpenHandler) {
     Node rv = null;
     
     switch (holder.getType())
@@ -1320,7 +1334,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
               oldPane.undock(n);
             }
 
-            n.dock(newPane, DockPos.LEFT);
+            n.setDockPane(newPane);
+            DockNodeEventHandler dockNodeEventHandler = newPane.new DockNodeEventHandler(n);
+            newPane.dockNodeEventFilters.put(n, dockNodeEventHandler);
+            n.addEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
           }
           else
           {

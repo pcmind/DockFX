@@ -27,16 +27,11 @@ public class ContentHolder
 		 */
 		Collection,
 		/**
-		 * The FloatingNode.
-		 */
-		FloatingNode,
-		/**
 		 * The DockNode.
 		 */
 		DockNode
 	}
 
-	private String name;
 	private Properties properties = new Properties();
 	private LinkedList children = new LinkedList();
 	private Type type;
@@ -46,9 +41,8 @@ public class ContentHolder
 
 	}
 
-	public ContentHolder( String name, Type type )
+	public ContentHolder( Type type )
 	{
-		this.name = name;
 		this.type = type;
 	}
 
@@ -60,16 +54,6 @@ public class ContentHolder
 	public void addChild( Object child )
 	{
 		children.add( child );
-	}
-
-	public String getName()
-	{
-		return name;
-	}
-
-	public void setName( String name )
-	{
-		this.name = name;
 	}
 
 	public Properties getProperties()
