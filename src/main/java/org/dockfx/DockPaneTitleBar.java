@@ -35,182 +35,178 @@ import javafx.stage.Stage;
  * @since DockFX 0.1
  */
 public class DockPaneTitleBar extends DockTitleBar {
-  /**
-   * The window this node is a title bar for.
-   */
-  private final DockPane dockPane;
-  
-  /**
-   * Creates a default DockTitleBar with captions and dragging behavior.
-   *
-   * @param dockPane The docking window that requires a title bar.
-   */
-  public DockPaneTitleBar(DockPane dockPane) {
-    super("dock-pane-title-bar");
-    label.textProperty().bind(dockPane.titleProperty());
-    label.graphicProperty().bind(dockPane.graphicProperty());
-    
-    this.dockPane = dockPane;
-  }
+    /**
+     * The window this node is a title bar for.
+     */
+    private final DockPane dockPane;
 
-  public void mirrorNodeTitleBar(DockNode node)
-  {
-    if (null != node)
-    {
-      label.textProperty().unbind();
-      label.graphicProperty().unbind();
-      label.setText(node.getTitle());
-      label.setGraphic(node.getGraphic());
-      label.textProperty().bind(node.titleProperty());
-      label.graphicProperty().bind(node.graphicProperty());
+    /**
+     * Creates a default DockTitleBar with captions and dragging behavior.
+     *
+     * @param dockPane The docking window that requires a title bar.
+     */
+    public DockPaneTitleBar(DockPane dockPane) {
+        super("dock-pane-title-bar");
+        label.textProperty().bind(dockPane.titleProperty());
+        label.graphicProperty().bind(dockPane.graphicProperty());
+
+        this.dockPane = dockPane;
     }
-    else
-    {
-      label.textProperty().unbind();
-      label.graphicProperty().unbind();
-      label.setText(dockPane.getTitle());
-      label.setGraphic(dockPane.getGraphic());
-      label.textProperty().bind(dockPane.titleProperty());
-      label.graphicProperty().bind(dockPane.graphicProperty());
+
+    public void mirrorNodeTitleBar(DockNode node) {
+        if (null != node) {
+            label.textProperty().unbind();
+            label.graphicProperty().unbind();
+            label.setText(node.getTitle());
+            label.setGraphic(node.getGraphic());
+            label.textProperty().bind(node.titleProperty());
+            label.graphicProperty().bind(node.graphicProperty());
+        } else {
+            label.textProperty().unbind();
+            label.graphicProperty().unbind();
+            label.setText(dockPane.getTitle());
+            label.setGraphic(dockPane.getGraphic());
+            label.textProperty().bind(dockPane.titleProperty());
+            label.graphicProperty().bind(dockPane.graphicProperty());
+        }
     }
-  }
-  
-  @Override
-  protected Stage getStage() {
-    return dockPane.getStage();
-  }
 
-  @Override
-  protected void handleCloseAction() {
-    dockPane.close();
-  }
+    @Override
+    protected Stage getStage() {
+        return dockPane.getStage();
+    }
 
-  @Override
-  protected void handleButtonAction() {
-          dockPane.setMaximized(!dockPane.isMaximized());
-  }
+    @Override
+    protected void handleCloseAction() {
+        dockPane.close();
+    }
 
-  @Override
-  public void handle(MouseEvent event) {
-    if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
-      if (dockPane.isFloating() && event.getClickCount() == 2
-              && event.getButton() == MouseButton.PRIMARY) {
+    @Override
+    protected void handleButtonAction() {
         dockPane.setMaximized(!dockPane.isMaximized());
-      } else {
-        // drag detected is used in place of mouse pressed so there is some threshold for the
-        // dragging which is determined by the default drag detection threshold
-        dragStart = new Point2D(event.getX(), event.getY());
-      }
-    } else if (event.getEventType() == MouseEvent.DRAG_DETECTED) {
-      if (dockPane.isFloating() && dockPane.isMaximized()) {
-        double ratioX = event.getX() / dockPane.getWidth();
-        double ratioY = event.getY() / dockPane.getHeight();
+    }
 
-        // Please note that setMaximized is ruined by width and height changes occurring on the
-        // stage and there is currently a bug report filed for this though I did not give them an
-        // accurate test case which I should and wish I would have. This was causing issues in the
-        // original release requiring maximized behavior to be implemented manually by saving the
-        // restored bounds. The problem was that the resize functionality in DockNode.java was
-        // executing at the same time canceling the maximized change.
-        // https://bugs.openjdk.java.net/browse/JDK-8133334
-        // restore/minimize the window after we have obtained its dimensions
-        dockPane.setMaximized(false);
+    @Override
+    public void handle(MouseEvent event) {
+        if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+            if (dockPane.isFloating() && event.getClickCount() == 2
+                    && event.getButton() == MouseButton.PRIMARY) {
+                dockPane.setMaximized(!dockPane.isMaximized());
+            } else {
+                // drag detected is used in place of mouse pressed so there is some threshold for the
+                // dragging which is determined by the default drag detection threshold
+                dragStart = new Point2D(event.getX(), event.getY());
+            }
+        } else if (event.getEventType() == MouseEvent.DRAG_DETECTED) {
+            if (dockPane.isFloating() && dockPane.isMaximized()) {
+                double ratioX = event.getX() / dockPane.getWidth();
+                double ratioY = event.getY() / dockPane.getHeight();
 
-        // scale the drag start location by our restored dimensions
-        dragStart = new Point2D(ratioX * dockPane.getWidth(), ratioY * dockPane.getHeight());
-      }
-      dragging = true;
-      event.consume();
-    } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
-      if (dockPane.isFloating() && event.getClickCount() == 2
-              && event.getButton() == MouseButton.PRIMARY) {
-        event.setDragDetect(false);
-        event.consume();
-        return;
-      }
+                // Please note that setMaximized is ruined by width and height changes occurring on the
+                // stage and there is currently a bug report filed for this though I did not give them an
+                // accurate test case which I should and wish I would have. This was causing issues in the
+                // original release requiring maximized behavior to be implemented manually by saving the
+                // restored bounds. The problem was that the resize functionality in DockNode.java was
+                // executing at the same time canceling the maximized change.
+                // https://bugs.openjdk.java.net/browse/JDK-8133334
+                // restore/minimize the window after we have obtained its dimensions
+                dockPane.setMaximized(false);
 
-      if (!dragging) {
-        return;
-      }
-
-      Stage stage = dockPane.getStage();
-      Insets insetsDelta = dockPane.getBorderPane().getInsets();
-
-      // it is possible that drag start has not been set if some other node had focus when
-      // we started the drag
-      if (null == dragStart) {
-        dragStart = new Point2D(event.getX(), event.getY());
-      }
-
-      // dragging this way makes the interface more responsive in the event
-      // the system is lagging as is the case with most current JavaFX
-      // implementations on Linux
-      stage.setX(event.getScreenX() - dragStart.getX() - insetsDelta.getLeft());
-      stage.setY(event.getScreenY() - dragStart.getY() - insetsDelta.getTop());
-
-      // TODO: change the pick result by adding a copyForPick()
-      DockEvent dockEnterEvent
-              = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_ENTER, event.getX(),
-                      event.getY(), event.getScreenX(), event.getScreenY(), null);
-      DockEvent dockOverEvent
-              = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_OVER, event.getX(),
-                      event.getY(), event.getScreenX(), event.getScreenY(), null);
-      DockEvent dockExitEvent
-              = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_EXIT, event.getX(),
-                      event.getY(), event.getScreenX(), event.getScreenY(), null);
-
-      DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {
-        @Override
-        public void run(Node node, Node dragNode) {
-          executions++;
-
-          if (dragNode != node) {
-            Event.fireEvent(node, dockEnterEvent.copyFor(DockPaneTitleBar.this, node));
-
-            if (dragNode != null) {
-              // fire the dock exit first so listeners
-              // can actually keep track of the node we
-              // are currently over and know when we
-              // aren't over any which DOCK_OVER
-              // does not provide
-              Event.fireEvent(dragNode, dockExitEvent.copyFor(DockPaneTitleBar.this, dragNode));
+                // scale the drag start location by our restored dimensions
+                dragStart = new Point2D(ratioX * dockPane.getWidth(), ratioY * dockPane.getHeight());
+            }
+            dragging = true;
+            event.consume();
+        } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+            if (dockPane.isFloating() && event.getClickCount() == 2
+                    && event.getButton() == MouseButton.PRIMARY) {
+                event.setDragDetect(false);
+                event.consume();
+                return;
             }
 
-            dragNodes.put(node.getScene().getWindow(), node);
-          }
-          Event.fireEvent(node, dockOverEvent.copyFor(DockPaneTitleBar.this, node));
+            if (!dragging) {
+                return;
+            }
+
+            Stage stage = dockPane.getStage();
+            Insets insetsDelta = dockPane.getBorderPane().getInsets();
+
+            // it is possible that drag start has not been set if some other node had focus when
+            // we started the drag
+            if (null == dragStart) {
+                dragStart = new Point2D(event.getX(), event.getY());
+            }
+
+            // dragging this way makes the interface more responsive in the event
+            // the system is lagging as is the case with most current JavaFX
+            // implementations on Linux
+            stage.setX(event.getScreenX() - dragStart.getX() - insetsDelta.getLeft());
+            stage.setY(event.getScreenY() - dragStart.getY() - insetsDelta.getTop());
+
+            // TODO: change the pick result by adding a copyForPick()
+            DockEvent dockEnterEvent
+                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_ENTER, event.getX(),
+                            event.getY(), event.getScreenX(), event.getScreenY(), null);
+            DockEvent dockOverEvent
+                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_OVER, event.getX(),
+                            event.getY(), event.getScreenX(), event.getScreenY(), null);
+            DockEvent dockExitEvent
+                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_EXIT, event.getX(),
+                            event.getY(), event.getScreenX(), event.getScreenY(), null);
+
+            DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {
+                @Override
+                public void run(Node node, Node dragNode) {
+                    executions++;
+
+                    if (dragNode != node) {
+                        Event.fireEvent(node, dockEnterEvent.copyFor(DockPaneTitleBar.this, node));
+
+                        if (dragNode != null) {
+                            // fire the dock exit first so listeners
+                            // can actually keep track of the node we
+                            // are currently over and know when we
+                            // aren't over any which DOCK_OVER
+                            // does not provide
+                            Event.fireEvent(dragNode, dockExitEvent.copyFor(DockPaneTitleBar.this, dragNode));
+                        }
+
+                        dragNodes.put(node.getScene().getWindow(), node);
+                    }
+                    Event.fireEvent(node, dockOverEvent.copyFor(DockPaneTitleBar.this, node));
+                }
+            };
+
+            this.pickEventTarget(new Point2D(event.getScreenX(), event.getScreenY()), eventTask,
+                    dockExitEvent);
+        } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
+            dragging = false;
+
+            DockEvent dockReleasedEvent
+                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_RELEASED, event.getX(),
+                            event.getY(), event.getScreenX(), event.getScreenY(), null, dockPane);
+
+            DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {
+                @Override
+                public void run(Node node, Node dragNode) {
+                    executions++;
+                    if (dragNode != node) {
+                        Event.fireEvent(node, dockReleasedEvent.copyFor(DockPaneTitleBar.this, node));
+                    }
+                    Event.fireEvent(node, dockReleasedEvent.copyFor(DockPaneTitleBar.this, node));
+                }
+            };
+
+            this.pickEventTarget(new Point2D(event.getScreenX(), event.getScreenY()), eventTask, null);
+
+            dragNodes.clear();
+
+            // Remove temporary event handler for bug mentioned above.
+            if (dockPane != null) {
+                dockPane.removeEventFilter(MouseEvent.MOUSE_DRAGGED, this);
+                dockPane.removeEventFilter(MouseEvent.MOUSE_RELEASED, this);
+            }
         }
-      };
-
-      this.pickEventTarget(new Point2D(event.getScreenX(), event.getScreenY()), eventTask,
-              dockExitEvent);
-    } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
-      dragging = false;
-
-      DockEvent dockReleasedEvent
-              = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_RELEASED, event.getX(),
-                      event.getY(), event.getScreenX(), event.getScreenY(), null, dockPane);
-
-      DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {
-        @Override
-        public void run(Node node, Node dragNode) {
-          executions++;
-          if (dragNode != node) {
-            Event.fireEvent(node, dockReleasedEvent.copyFor(DockPaneTitleBar.this, node));
-          }
-          Event.fireEvent(node, dockReleasedEvent.copyFor(DockPaneTitleBar.this, node));
-        }
-      };
-
-      this.pickEventTarget(new Point2D(event.getScreenX(), event.getScreenY()), eventTask, null);
-
-      dragNodes.clear();
-
-      // Remove temporary event handler for bug mentioned above.
-      if (dockPane != null) {
-        dockPane.removeEventFilter(MouseEvent.MOUSE_DRAGGED, this);
-        dockPane.removeEventFilter(MouseEvent.MOUSE_RELEASED, this);
-      }
     }
-  }
 }

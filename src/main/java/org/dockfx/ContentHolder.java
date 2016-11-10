@@ -8,81 +8,70 @@ import java.util.Properties;
  *
  * @author HongKee Moon
  */
-public class ContentHolder
-{
-	/**
-	 * The enum ContentHolder Type.
-	 */
-	public enum Type {
-		/**
-		 * The SplitPane.
-		 */
-		SplitPane,
-		/**
-		 * The TabPane.
-		 */
-		TabPane,
-		/**
-		 * The Collection.
-		 */
-		Collection,
-		/**
-		 * The DockNode.
-		 */
-		DockNode
-	}
+public class ContentHolder {
+    /**
+     * The enum ContentHolder Type.
+     */
+    public enum Type {
+        /**
+         * The SplitPane.
+         */
+        SplitPane,
+        /**
+         * The TabPane.
+         */
+        TabPane,
+        /**
+         * The Collection.
+         */
+        Collection,
+        /**
+         * The DockNode.
+         */
+        DockNode
+    }
 
-	private Properties properties = new Properties();
-	private LinkedList children = new LinkedList();
-	private Type type;
+    private Properties properties = new Properties();
+    private LinkedList children = new LinkedList();
+    private Type type;
 
-	public ContentHolder()
-	{
+    public ContentHolder() {
 
-	}
+    }
 
-	public ContentHolder( Type type )
-	{
-		this.type = type;
-	}
+    public ContentHolder(Type type) {
+        this.type = type;
+    }
 
-	public void addProperty( Object key, Object value )
-	{
-		properties.put( key, value );
-	}
+    public void addProperty(Object key, Object value) {
+        properties.put(key, value);
+    }
 
-	public void addChild( Object child )
-	{
-		children.add( child );
-	}
+    public void addChild(Object child) {
+        children.add(child);
+    }
 
-	public Properties getProperties()
-	{
-		return properties;
-	}
+    public Properties getProperties() {
+        return properties;
+    }
 
-	public void setProperties( Properties properties )
-	{
-		this.properties = properties;
-	}
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 
-	public LinkedList getChildren()
-	{
-		return children;
-	}
+    public LinkedList getChildren() {
+        return children;
+    }
 
-	public void setChildren( LinkedList children )
-	{
-		this.children = children;
-	}
+    public void setChildren(LinkedList children) {
+        this.children = children;
+    }
 
-	public Type getType()
-	{
-		return type;
-	}
+    public Type getType() {
+        return type;
+    }
 
-	public void setType( Type type )
-	{
-		this.type = type;
-	}
+    public void setType(Type type) {
+        this.type = type;
+    }
 }
