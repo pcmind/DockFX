@@ -875,7 +875,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 // if the orientation is different then reparent the split pane
                 if (split.getOrientation() != requestedOrientation) {
                     if (split.getItems().size() > 1) {
-                        ContentSplitPane splitPane = new ContentSplitPane(null);
+                        ContentSplitPane splitPane = new ContentSplitPane();
 
                         if (split == root && sibling == root) {
                             this.getChildren().set(this.getChildren().indexOf(root), splitPane);
@@ -898,7 +898,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
                 // if the orientation is different then reparent the split pane
                 if (split.getOrientation() != requestedOrientation) {
-                    ContentSplitPane splitPane = new ContentSplitPane(null);
+                    ContentSplitPane splitPane = new ContentSplitPane();
                     if (split == root && sibling == root) {
                         this.getChildren().set(this.getChildren().indexOf(root), splitPane);
                         splitPane.getItems().add(split);
