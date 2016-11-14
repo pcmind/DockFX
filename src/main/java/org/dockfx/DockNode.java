@@ -295,7 +295,7 @@ public class DockNode extends VBox {
                 dockPane.floatNode(this);
                 dockPane.setFloating(this, translation, false);
             }
-        } else if (!floating && null != dockPane && dockPane.isFloating()) {
+        } else if (!floating && null != dockPane) {
             undock();
 
             // dispose of the old dock pane if it is now empty

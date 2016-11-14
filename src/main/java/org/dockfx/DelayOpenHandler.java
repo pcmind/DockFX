@@ -6,5 +6,5 @@ package org.dockfx;
  */
 @FunctionalInterface
 public interface DelayOpenHandler {
-    DockNode open(String nodeName, double width, double height);
+    DockNode open(String nodeId, String nodeTitle, double width, double height);
 }

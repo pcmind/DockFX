@@ -26,33 +26,37 @@ public class ContentTabPane extends TabPane implements ContentPane {
         this.setStyle("-fx-skin: \"org.dockfx.pane.skin.ContentTabPaneSkin\";");
     }
 
+    @Override
     public Type getType() {
         return Type.TabPane;
     }
 
+    @Override
     public void setContentParent(ContentPane pane) {
         parent = pane;
     }
 
+    @Override
     public ContentPane getContentParent() {
         return parent;
     }
 
+    @Override
     public ContentPane getSiblingParent(Stack<Parent> stack, Node sibling) {
         ContentPane pane = null;
 
         while (!stack.isEmpty()) {
-            Parent parent = stack.pop();
+            Parent lparent = stack.pop();
 
-            List<Node> children = parent.getChildrenUnmodifiable();
+            List<Node> children = lparent.getChildrenUnmodifiable();
 
-            if (parent instanceof ContentPane) {
-                children = ((ContentPane) parent).getChildrenList();
+            if (lparent instanceof ContentPane) {
+                children = ((ContentPane) lparent).getChildrenList();
             }
 
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i) == sibling) {
-                    pane = (ContentPane) parent;
+                    pane = (ContentPane) lparent;
                 } else if (children.get(i) instanceof Parent) {
                     stack.push((Parent) children.get(i));
                 }
@@ -61,6 +65,7 @@ public class ContentTabPane extends TabPane implements ContentPane {
         return pane;
     }
 
+    @Override
     public boolean removeNode(Stack<Parent> stack, Node node) {
         List<Node> children = getChildrenList();
 
@@ -74,20 +79,24 @@ public class ContentTabPane extends TabPane implements ContentPane {
         return false;
     }
 
+    @Override
     public void set(int idx, Node node) {
         DockNode newNode = (DockNode) node;
         getTabs().set(idx, new DockNodeTab(newNode));
         getSelectionModel().select(idx);
     }
 
+    @Override
     public void set(Node sibling, Node node) {
         set(getChildrenList().indexOf(sibling), node);
     }
 
+    @Override
     public List<Node> getChildrenList() {
         return getTabs().stream().map(i -> i.getContent()).collect(Collectors.toList());
     }
 
+    @Override
     public void addNode(Node root, Node sibling, Node node, DockPos dockPos) {
         DockNode newNode = (DockNode) node;
         DockNodeTab t = new DockNodeTab(newNode);

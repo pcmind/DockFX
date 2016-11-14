@@ -614,16 +614,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
      * no translation.
      */
     public void setFloating(Region content, Point2D translation, boolean absolutePosition) {
-        // position the new stage relative to the old scene offset
-        Point2D floatScene = this.localToScene(0, 0);
-        Point2D floatScreen = this.localToScreen(0, 0);
-
         // setup window stage
-//      dockTitleBar.setVisible(node.isCustomTitleBar());
-//      dockTitleBar.setManaged(node.isCustomTitleBar());
         stage = new Stage();
         Stage parentStage = null;
-//      stage.titleProperty().bind(node.titleProperty());
         if (parentDockPane != null && parentDockPane.getStage() != null) {
             parentStage = parentDockPane.getStage();
             stage.initOwner(parentStage);
@@ -637,6 +630,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         Point2D stagePosition;
         boolean translateToCenter = false;
         if (!absolutePosition) {
+            // position the new stage relative to the old scene offset
+            Point2D floatScreen = this.localToScreen(0, 0);
+
             //      if (node.isDecorated()) {
             //        Window owner = stage.getOwner();
             //        stagePosition = floatScene.add(new Point2D(owner.getX(), owner.getY()));
@@ -820,13 +816,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         dockNodeEventFilters.put(node, dockNodeEventHandler);
         node.addEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
 
-        // if we already only have a single child and are floating then we need to switch on its titlebar
-        if (isFloating()) {
-            DockNode onlyChild = getOnlyChild();
-            if (null != onlyChild) {
-                onlyChild.showTitleBar(true);
-                dockTitleBar.mirrorNodeTitleBar(null);
-            }
+        // if we already only have a single child then we need to switch on its titlebar
+        DockNode onlyChild = getOnlyChild();
+        if (null != onlyChild) {
+            onlyChild.showTitleBar(true);
+            dockTitleBar.mirrorNodeTitleBar(null);
         }
 
         ContentPane pane = (ContentPane) root;
@@ -855,12 +849,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 DockNode siblingNode = (DockNode) sibling;
                 DockNode newNode = (DockNode) node;
 
+                if (null != siblingNode) {
+                    siblingNode.showTitleBar(true);
+                }
+                newNode.showTitleBar(true);
+
                 ContentTabPane tabPane = new ContentTabPane();
+                tabPane.setContentParent(pane);
 
                 tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
                 tabPane.addDockNodeTab(new DockNodeTab(newNode));
-
-                tabPane.setContentParent(pane);
 
                 double[] pos = ((ContentSplitPane) pane).getDividerPositions();
                 pane.set(sibling, tabPane);
@@ -877,7 +875,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 // if the orientation is different then reparent the split pane
                 if (split.getOrientation() != requestedOrientation) {
                     if (split.getItems().size() > 1) {
-                        ContentSplitPane splitPane = new ContentSplitPane();
+                        ContentSplitPane splitPane = new ContentSplitPane(null);
 
                         if (split == root && sibling == root) {
                             this.getChildren().set(this.getChildren().indexOf(root), splitPane);
@@ -900,7 +898,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
                 // if the orientation is different then reparent the split pane
                 if (split.getOrientation() != requestedOrientation) {
-                    ContentSplitPane splitPane = new ContentSplitPane();
+                    ContentSplitPane splitPane = new ContentSplitPane(null);
                     if (split == root && sibling == root) {
                         this.getChildren().set(this.getChildren().indexOf(root), splitPane);
                         splitPane.getItems().add(split);
@@ -929,9 +927,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         node.showTitleBar(!isFloating() || !isOnlyChild(node));
 
         if (isFloating()) {
-            DockNode onlyChild = getOnlyChild();
-            if (null != onlyChild) {
-                dockTitleBar.mirrorNodeTitleBar(onlyChild);
+            DockNode newOnlyChild = getOnlyChild();
+            if (null != newOnlyChild) {
+                dockTitleBar.mirrorNodeTitleBar(newOnlyChild);
             }
         }
     }
@@ -1164,7 +1162,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
             holder = new ContentHolder(ContentHolder.Type.DockNode);
 
-            holder.addProperty("Title", nd.getIdentity());
+            holder.addProperty("Id", nd.getIdentity());
+            holder.addProperty("Title", nd.getTitle());
             holder.addProperty("Size", new Double[]{
                 nd.getWidth(),
                 nd.getHeight()
@@ -1238,7 +1237,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             ContentHolder holder = (ContentHolder) item;
 
             DockPane floatingPane = new DockPane(this);
-            Control newRoot = (Control) buildPane(this, floatingPane, holder, dockNodes, delayOpenHandler);
+            Control newRoot = (Control) buildPane(this, floatingPane, null,
+                    holder, dockNodes, delayOpenHandler);
 
             floatingPane.root = newRoot;
             floatingPane.getChildren().add(newRoot);
@@ -1259,7 +1259,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         ContentHolder rootHolder = contents.get("_DockedNodes");
 
         if (null != rootHolder) {
-            Node newRoot = buildPane(this, this, rootHolder, dockNodes, delayOpenHandler);
+            Node newRoot = buildPane(this, this, null, rootHolder, dockNodes, delayOpenHandler);
 
             if (null != newRoot) {
                 this.root = (Control) newRoot;
@@ -1268,7 +1268,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
     }
 
-    private static Node buildPane(DockPane oldPane, DockPane newPane,
+    private static Node buildPane(DockPane oldPane, DockPane newPane, ContentPane containerPane,
             ContentHolder holder, HashMap<String, DockNode> dockNodes,
             DelayOpenHandler delayOpenHandler) {
         Node rv = null;
@@ -1276,12 +1276,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         switch (holder.getType()) {
             case SplitPane: {
                 ContentSplitPane splitPane = new ContentSplitPane();
+                splitPane.setContentParent(containerPane);
                 splitPane.setOrientation((Orientation) holder.getProperties().get("Orientation"));
                 splitPane.setDividerPositions((double[]) holder.getProperties().get("DividerPositions"));
 
                 for (Object item : holder.getChildren()) {
                     // Call this function recursively
-                    splitPane.getItems().add(buildPane(oldPane, newPane, (ContentHolder) item, dockNodes, delayOpenHandler));
+                    splitPane.getItems().add(buildPane(oldPane, newPane, splitPane,
+                            (ContentHolder) item, dockNodes, delayOpenHandler));
                 }
 
                 rv = splitPane;
@@ -1289,9 +1291,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             break;
             case TabPane: {
                 ContentTabPane tabPane = new ContentTabPane();
+                tabPane.setContentParent(containerPane);
 
                 for (Object item : holder.getChildren()) {
-                    Node n = buildPane(oldPane, newPane, (ContentHolder) item, dockNodes, delayOpenHandler);
+                    Node n = buildPane(oldPane, newPane, tabPane,
+                            (ContentHolder) item, dockNodes, delayOpenHandler);
 
                     if (n instanceof DockNode) {
                         tabPane.addDockNodeTab(new DockNodeTab((DockNode) n));
@@ -1303,13 +1307,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             }
             break;
             case DockNode: {
-                String name = holder.getProperties().getProperty("Title");
+                String id = holder.getProperties().getProperty("Id");
+                String title = holder.getProperties().getProperty("Title");
                 Double[] size = (Double[]) holder.getProperties().get("Size");
-                DockNode n = dockNodes.get(name);
+                DockNode n = dockNodes.get(id);
 
                 if ((null == n) && (null != delayOpenHandler)) {
                     // If delayOpenHandler is provided, we call it
-                    n = delayOpenHandler.open(name, size[0], size[1]);
+                    n = delayOpenHandler.open(id, title, size[0], size[1]);
                 }
 
                 // Use dock node
@@ -1327,10 +1332,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                     newPane.dockNodeEventFilters.put(n, dockNodeEventHandler);
                     n.addEventFilter(DockEvent.DOCK_OVER, dockNodeEventHandler);
                 } else {
-                    System.err.println(name + " is not present.");
+                    System.err.println(id + " is not present.");
                 }
 
-                dockNodes.remove(name);
+                dockNodes.remove(id);
                 rv = n;
             }
             break;

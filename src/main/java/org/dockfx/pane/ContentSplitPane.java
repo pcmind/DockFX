@@ -26,14 +26,17 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
      */
     ContentPane parent;
 
+    @Override
     public Type getType() {
         return Type.SplitPane;
     }
 
+    @Override
     public void setContentParent(ContentPane pane) {
         parent = pane;
     }
 
+    @Override
     public ContentPane getContentParent() {
         return parent;
     }
@@ -53,21 +56,22 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
         getItems().add(node);
     }
 
+    @Override
     public ContentPane getSiblingParent(Stack<Parent> stack, Node sibling) {
         ContentPane pane = null;
 
         while (!stack.isEmpty()) {
-            Parent parent = stack.pop();
+            Parent lparent = stack.pop();
 
-            List<Node> children = parent.getChildrenUnmodifiable();
+            List<Node> children = lparent.getChildrenUnmodifiable();
 
-            if (parent instanceof ContentPane) {
-                children = ((ContentPane) parent).getChildrenList();
+            if (lparent instanceof ContentPane) {
+                children = ((ContentPane) lparent).getChildrenList();
             }
 
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i) == sibling) {
-                    pane = (ContentPane) parent;
+                    pane = (ContentPane) lparent;
                 } else if (children.get(i) instanceof Parent) {
                     stack.push((Parent) children.get(i));
                 }
@@ -76,6 +80,7 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
         return pane;
     }
 
+    @Override
     public boolean removeNode(Stack<Parent> stack, Node node) {
         ContentPane pane;
 
@@ -109,18 +114,22 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
         return false;
     }
 
+    @Override
     public List<Node> getChildrenList() {
         return getItems();
     }
 
+    @Override
     public void set(int idx, Node node) {
         getItems().set(idx, node);
     }
 
+    @Override
     public void set(Node sibling, Node node) {
         set(getItems().indexOf(sibling), node);
     }
 
+    @Override
     public void addNode(Node root, Node sibling, Node node, DockPos dockPos) {
         // finally dock the node to the correct split pane
         ObservableList<Node> splitItems = getItems();
