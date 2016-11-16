@@ -28,6 +28,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -290,17 +292,17 @@ public class DockNode extends VBox {
                 }
 
                 // need a new DockPane to contain us
-                dockPane = new DockPane(parentDockPane);
+                setDockPane(new DockPane(parentDockPane));
 
                 dockPane.floatNode(this);
                 dockPane.setFloating(this, translation, false);
             }
         } else if (!floating && null != dockPane) {
-            undock();
+            DockPane oldDockPane = undock();
 
             // dispose of the old dock pane if it is now empty
-            if (dockPane.isFloating() && dockPane.getChildren().isEmpty()) {
-                dockPane.close();
+            if (oldDockPane.isFloating() && oldDockPane.getChildren().isEmpty()) {
+                oldDockPane.close();
             }
         }
     }
@@ -645,14 +647,22 @@ public class DockNode extends VBox {
     }
 
     protected void setDockPane(DockPane newDockPane) {
+        if (null != dockPane) {
+            dockPane.closedProperty().removeListener(dockPaneCloseListener);
+        }
+        
         this.dockPane = newDockPane;
+
+        if (null != newDockPane) {
+            newDockPane.closedProperty().addListener(dockPaneCloseListener);
+        }
     }
 
     private final void dockImpl(DockPane newDockPane) {
         if ((dockPane != null) && dockPane.isFloating()) {
             setFloating(false);
         }
-        this.dockPane = newDockPane;
+        setDockPane(newDockPane);
         //this.dockedProperty.set(true);
         this.closedProperty.set(false);
     }
@@ -660,12 +670,18 @@ public class DockNode extends VBox {
     /**
      * Detach this node from its previous dock pane if it was previously docked.
      */
-    public void undock() {
+    public DockPane undock() {
+        DockPane oldDockPane = null;
+        
         if (dockPane != null) {
+            oldDockPane = dockPane;
             dockPane.undock(this);
+            setDockPane(null);
         }
         //this.dockedProperty.set(false);
         this.tabbedProperty.set(false);
+        
+        return oldDockPane;
     }
 
     /**
@@ -687,6 +703,16 @@ public class DockNode extends VBox {
     public void focus() {
         if (tabbedProperty().get()) {
             dockNodeTab.select();
+        }
+    }
+
+    private final DockPaneCloseListener dockPaneCloseListener = new DockPaneCloseListener();
+    private final class DockPaneCloseListener implements ChangeListener<Boolean> {
+        @Override
+        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+            if (newValue) {
+                close();
+            }
         }
     }
 }

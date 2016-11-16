@@ -20,7 +20,6 @@
  */
 package org.dockfx;
 
-import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -53,8 +52,8 @@ public class DockNodeTitleBar extends DockTitleBar {
 
         this.dockNode = dockNode;
 
-        dockNode.closableProperty().addListener((ObservableValue< ? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-            if (newValue) {
+        dockNode.closableProperty().addListener((p, o, n) -> {
+            if (n) {
                 if (!getChildren().contains(closeButton)) {
                     getChildren().add(closeButton);
                 }

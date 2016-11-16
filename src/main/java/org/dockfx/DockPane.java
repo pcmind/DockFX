@@ -276,6 +276,28 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     /**
+     * Boolean property maintaining whether this pane is currently closed.
+     */
+    public final BooleanProperty closedProperty() {
+        return closedProperty;
+    }
+
+    private BooleanProperty closedProperty = new SimpleBooleanProperty(false) {
+        @Override
+        protected void invalidated() {
+        }
+
+        @Override
+        public String getName() {
+            return "closed";
+        }
+    };
+
+    public final boolean isClosed() {
+        return closedProperty.get();
+    }
+
+    /**
      * Base class for a dock indicator button that allows it to be displayed during a dock event and
      * continue to receive input.
      *
@@ -495,6 +517,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
     public void close() {
         floatingDockPanes.remove(this);
+        this.closedProperty.set(true);
         this.stage.close();
     }
 
