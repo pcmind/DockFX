@@ -1122,6 +1122,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 floatingPane.getStage().getY()
             });
 
+            floatingNode.addProperty("MinSize", new Double[]{
+                floatingPane.getStage().getMinWidth(),
+                floatingPane.getStage().getMinHeight()
+            });
+
+            floatingNode.addProperty("Size", new Double[]{
+                floatingPane.getStage().getWidth(),
+                floatingPane.getStage().getHeight()
+            });
+
             floatingContent.addChild(floatingNode);
         }
 
@@ -1244,14 +1254,23 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             floatingPane.getChildren().add(newRoot);
 
             String title = holder.getProperties().getProperty("Title");
-            Double[] position = (Double[]) holder.getProperties().get("Position");
             floatingPane.setTitle(title);
 
             DockNode onlyChild = floatingPane.getOnlyChild();
             if (null != onlyChild) {
                 floatingPane.floatNode(onlyChild);
             }
+
+            Double[] position = (Double[]) holder.getProperties().get("Position");
             floatingPane.setFloating(newRoot, new Point2D(position[0], position[1]), true);
+
+            // need to reset min width/height
+            Double[] msize = (Double[]) holder.getProperties().get("MinSize");
+            Double[] size = (Double[]) holder.getProperties().get("Size");
+            floatingPane.stage.setMinWidth(msize[0]);
+            floatingPane.stage.setMinHeight(msize[1]);
+            
+            floatingPane.queueOnShow((e) -> {floatingPane.stage.setWidth(size[0]);floatingPane.stage.setHeight(size[1]);});
         }
 
         // Restore dock location based on the preferences
