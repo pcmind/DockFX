@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Stack;
 
 import com.sun.javafx.css.StyleManager;
+import java.io.InputStream;
+import java.util.Map;
 
 import javafx.stage.Stage;
 
@@ -1201,6 +1203,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 nd.getWidth(),
                 nd.getHeight()
             });
+
+            if (null != nd.getViewController()) {
+                Map<String, Object> props = nd.getViewController().getState();
+                holder.addProperty("Properties", props);
+            }
         }
 
         if ((null != holder) && (pane instanceof ContentPane)) {
@@ -1218,24 +1225,29 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         loadPreference(filePath, null);
     }
 
+    public void loadPreference(InputStream is) {
+        loadPreference(is, null);
+    }
+
     public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) throws FileNotFoundException {
+        loadPreference(new BufferedInputStream(new FileInputStream(filePath)), delayOpenHandler);
+    }
+
+    public void loadPreference(InputStream is, DelayOpenHandler delayOpenHandler) {
         HashMap<String, ContentHolder> contents
-                = (HashMap<String, ContentHolder>) loadCollection(filePath);
+                = (HashMap<String, ContentHolder>) loadCollection(is);
 
         if (null != contents) {
             applyPane(contents, (ContentPane) root, delayOpenHandler);
         }
     }
 
-    private Object loadCollection(String fileName) throws FileNotFoundException {
-        try (XMLDecoder e = new XMLDecoder(
-                new BufferedInputStream(
-                        new FileInputStream(fileName)))) {
-
+    private Object loadCollection(InputStream is) {
+        try (XMLDecoder e = new XMLDecoder(is)) {
             return e.readObject();
         }
         catch (ArrayIndexOutOfBoundsException ex) {
-            // emprt file
+            // empty file
         }
 
         return null;
@@ -1292,8 +1304,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             Double[] size = (Double[]) holder.getProperties().get("Size");
             floatingPane.stage.setMinWidth(msize[0]);
             floatingPane.stage.setMinHeight(msize[1]);
-            
-            floatingPane.queueOnShow((e) -> {floatingPane.stage.setWidth(size[0]);floatingPane.stage.setHeight(size[1]);});
+
+            floatingPane.queueOnShow((e) -> {
+                floatingPane.stage.setWidth(size[0]);
+                floatingPane.stage.setHeight(size[1]);
+            });
         }
 
         // Restore dock location based on the preferences
@@ -1352,11 +1367,12 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                 String id = holder.getProperties().getProperty("Id");
                 String title = holder.getProperties().getProperty("Title");
                 Double[] size = (Double[]) holder.getProperties().get("Size");
+                Map<String, Object> props = (Map) holder.getProperties().get("Properties");
                 DockNode n = dockNodes.get(id);
 
                 if ((null == n) && (null != delayOpenHandler)) {
                     // If delayOpenHandler is provided, we call it
-                    n = delayOpenHandler.open(id, title, size[0], size[1]);
+                    n = delayOpenHandler.open(id, title, size[0], size[1], props);
                 }
 
                 // Use dock node
