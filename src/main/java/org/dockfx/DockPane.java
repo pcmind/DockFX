@@ -1131,7 +1131,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
     }
 
-    public void storePreference(String filePath) {
+    public void storeLayout(String filePath) {
+        storeLayout(filePath, generateLayout());
+    }
+    
+    public Map<String, ContentHolder> generateLayout() {
         HashMap<String, ContentHolder> contents = new HashMap<>();
 
         // Floating Nodes collection
@@ -1163,14 +1167,15 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         if (null != this.root) {
             contents.put("_DockedNodes", checkPane(this.root));
         }
-        storeCollection(filePath, contents);
+        
+        return contents;
     }
 
-    private void storeCollection(String fileName, Object collection) {
+    public void storeLayout(String fileName, Map<String, ContentHolder> contents) {
         try (XMLEncoder e = new XMLEncoder(
                 new BufferedOutputStream(
                         new FileOutputStream(fileName)))) {
-            e.writeObject(collection);
+            e.writeObject(contents);
         }
         catch (FileNotFoundException e1) {
             e1.printStackTrace();
@@ -1221,30 +1226,35 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         return holder;
     }
 
-    public void loadPreference(String filePath) throws FileNotFoundException {
-        loadPreference(filePath, null);
+    public void loadAndApplyLayout(String filePath) throws FileNotFoundException {
+        loadAndApplyLayout(filePath, null);
     }
 
-    public void loadPreference(InputStream is) {
-        loadPreference(is, null);
+    public void loadAndApplyLayout(InputStream is) {
+        loadAndApplyLayout(is, null);
     }
 
-    public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) throws FileNotFoundException {
-        loadPreference(new BufferedInputStream(new FileInputStream(filePath)), delayOpenHandler);
+    public void loadAndApplyLayout(String filePath, DelayOpenHandler delayOpenHandler) throws FileNotFoundException {
+        loadAndApplyLayout(new BufferedInputStream(new FileInputStream(filePath)), delayOpenHandler);
     }
 
-    public void loadPreference(InputStream is, DelayOpenHandler delayOpenHandler) {
-        HashMap<String, ContentHolder> contents
-                = (HashMap<String, ContentHolder>) loadCollection(is);
+    public void loadAndApplyLayout(InputStream is, DelayOpenHandler delayOpenHandler) {
+        applyLayout(loadLayout(is), delayOpenHandler);
+    }
 
+    public void applyLayout(Map<String, ContentHolder> contents, DelayOpenHandler delayOpenHandler) {
         if (null != contents) {
             applyPane(contents, (ContentPane) root, delayOpenHandler);
         }
     }
 
-    private Object loadCollection(InputStream is) {
+    public HashMap<String, ContentHolder> loadLayout(String filePath) throws FileNotFoundException {
+        return loadLayout(new BufferedInputStream(new FileInputStream(filePath)));
+    }
+    
+    public HashMap<String, ContentHolder> loadLayout(InputStream is) {
         try (XMLDecoder e = new XMLDecoder(is)) {
-            return e.readObject();
+            return (HashMap<String, ContentHolder>) e.readObject();
         }
         catch (ArrayIndexOutOfBoundsException ex) {
             // empty file
@@ -1267,7 +1277,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
     }
 
-    private void applyPane(HashMap<String, ContentHolder> contents, ContentPane root, DelayOpenHandler delayOpenHandler) {
+    private void applyPane(Map<String, ContentHolder> contents, ContentPane root, DelayOpenHandler delayOpenHandler) {
         // Collect the current pane information
         HashMap<String, DockNode> dockNodes = new HashMap<>();
 
