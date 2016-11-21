@@ -113,7 +113,7 @@ public class DockFX extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if (dirExist(getUserDataDirectory())) {
-                    dockPane.storePreference(getUserDataDirectory() + "dock.pref");
+                    dockPane.storeLayout(getUserDataDirectory() + "dock.pref");
                 }
             }
         });
@@ -123,7 +123,7 @@ public class DockFX extends Application {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    dockPane.loadPreference(getUserDataDirectory() + "dock.pref");
+                    dockPane.loadAndApplyLayout(getUserDataDirectory() + "dock.pref");
                 }
                 catch (FileNotFoundException ex) {
                     ex.printStackTrace();
