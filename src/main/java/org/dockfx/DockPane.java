@@ -1119,7 +1119,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         if (event.getEventType() == DockEvent.DOCK_RELEASED && event.getContents() != null) {
             if (dockPosDrag != null && dockIndicatorOverlay.isShowing()) {
                 DockNode dockNode = ((DockPane) event.getContents()).getOnlyChild();
-                dockNode.dock(this, dockPosDrag, dockAreaDrag);
+                if (null != dockNode) {
+                    dockNode.dock(this, dockPosDrag, dockAreaDrag);
+                }
             }
         }
 
@@ -1137,7 +1139,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     public void storeLayout(String filePath) {
         storeLayout(filePath, generateLayout());
     }
-    
+
     public Map<String, ContentHolder> generateLayout() {
         HashMap<String, ContentHolder> contents = new HashMap<>();
 
@@ -1170,17 +1172,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         if (null != this.root) {
             contents.put("_DockedNodes", checkPane(this.root));
         }
-        
+
         return contents;
     }
 
-    public void storeLayout(String fileName, Map<String, ContentHolder> contents) {
+    public static void storeLayout(String fileName, Map<String, ContentHolder> contents) {
         try (XMLEncoder e = new XMLEncoder(
                 new BufferedOutputStream(
                         new FileOutputStream(fileName)))) {
             e.writeObject(contents);
-        }
-        catch (FileNotFoundException e1) {
+        } catch (FileNotFoundException e1) {
             e1.printStackTrace();
         }
     }
@@ -1251,15 +1252,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
     }
 
-    public HashMap<String, ContentHolder> loadLayout(String filePath) throws FileNotFoundException {
+    public static HashMap<String, ContentHolder> loadLayout(String filePath) throws FileNotFoundException {
         return loadLayout(new BufferedInputStream(new FileInputStream(filePath)));
     }
-    
-    public HashMap<String, ContentHolder> loadLayout(InputStream is) {
+
+    public static HashMap<String, ContentHolder> loadLayout(InputStream is) {
         try (XMLDecoder e = new XMLDecoder(is)) {
             return (HashMap<String, ContentHolder>) e.readObject();
-        }
-        catch (ArrayIndexOutOfBoundsException ex) {
+        } catch (ArrayIndexOutOfBoundsException ex) {
             // empty file
         }
 

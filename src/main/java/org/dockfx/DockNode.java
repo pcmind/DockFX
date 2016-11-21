@@ -185,8 +185,7 @@ public class DockNode extends VBox {
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.load(DockNode.class.getResourceAsStream(FXMLPath));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             loader.setRoot(new StackPane(new Label("Could not load FXML file")));
         }
@@ -260,8 +259,10 @@ public class DockNode extends VBox {
     }
 
     public void showTitleBar(boolean show) {
-        dockTitleBar.setVisible(show);
-        dockTitleBar.setManaged(show);
+        if (null != dockTitleBar) {
+            dockTitleBar.setVisible(show);
+            dockTitleBar.setManaged(show);
+        }
     }
 
     public Stage getStage() {
@@ -650,7 +651,7 @@ public class DockNode extends VBox {
         if (null != dockPane) {
             dockPane.closedProperty().removeListener(dockPaneCloseListener);
         }
-        
+
         this.dockPane = newDockPane;
 
         if (null != newDockPane) {
@@ -672,7 +673,7 @@ public class DockNode extends VBox {
      */
     public DockPane undock() {
         DockPane oldDockPane = null;
-        
+
         if (dockPane != null) {
             oldDockPane = dockPane;
             dockPane.undock(this);
@@ -680,7 +681,7 @@ public class DockNode extends VBox {
         }
         //this.dockedProperty.set(false);
         this.tabbedProperty.set(false);
-        
+
         return oldDockPane;
     }
 
@@ -707,6 +708,7 @@ public class DockNode extends VBox {
     }
 
     private final DockPaneCloseListener dockPaneCloseListener = new DockPaneCloseListener();
+
     private final class DockPaneCloseListener implements ChangeListener<Boolean> {
         @Override
         public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
