@@ -15,7 +15,8 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * If not, see
+ * <http://www.gnu.org/licenses/>.
  *
  */
 package org.dockfx;
@@ -27,7 +28,9 @@ import javafx.event.EventTarget;
 import javafx.event.EventType;
 import javafx.geometry.Point3D;
 import javafx.scene.Node;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
+import javafx.stage.Stage;
 
 /**
  * Base class for DockFX events. Each DockFX event has associated an event source, event target and
@@ -48,7 +51,7 @@ public class DockEvent extends Event {
     /**
      * Common supertype for all dock event types.
      */
-    public static final EventType<DockEvent> ANY = new EventType<DockEvent>(Event.ANY, "DOCK");
+    public static final EventType<DockEvent> ANY = new EventType<>(Event.ANY, "DOCK");
 
     /**
      * This event occurs when a dock window is being dragged by its title bar and the mouse enters a
@@ -56,7 +59,7 @@ public class DockEvent extends Event {
      * may be interested in receiving the dock pane.
      */
     public static final EventType<DockEvent> DOCK_ENTER
-            = new EventType<DockEvent>(DockEvent.ANY, "DOCK_ENTER");
+            = new EventType<>(DockEvent.ANY, "DOCK_ENTER");
 
     /**
      * This event occurs when a dock window is being dragged by its title bar and the mouse is
@@ -64,7 +67,7 @@ public class DockEvent extends Event {
      * stages that may be interested in receiving the dock pane.
      */
     public static final EventType<DockEvent> DOCK_OVER
-            = new EventType<DockEvent>(DockEvent.ANY, "DOCK_OVER");
+            = new EventType<>(DockEvent.ANY, "DOCK_OVER");
 
     /**
      * This event occurs when a dock window is being dragged by its title bar and the mouse exits a
@@ -72,7 +75,7 @@ public class DockEvent extends Event {
      * may be interested in receiving the dock pane.
      */
     public static final EventType<DockEvent> DOCK_EXIT
-            = new EventType<DockEvent>(DockEvent.ANY, "DOCK_EXIT");
+            = new EventType<>(DockEvent.ANY, "DOCK_EXIT");
 
     /**
      * This event occurs when a dock window is being dragged by its title bar and the mouse is
@@ -80,7 +83,21 @@ public class DockEvent extends Event {
      * all stages that may be interested in receiving the dock pane.
      */
     public static final EventType<DockEvent> DOCK_RELEASED
-            = new EventType<DockEvent>(DockEvent.ANY, "DOCK_RELEASED");
+            = new EventType<>(DockEvent.ANY, "DOCK_RELEASED");
+
+    /**
+     * Stage of the originator of the event.
+     */
+    private transient Stage stage;
+
+    /**
+     * Stage of the originator of the event.
+     *
+     * @return stage of the originator of the event.
+     */
+    public final Stage getStage() {
+        return stage;
+    }
 
     /**
      * Horizontal x position of the event relative to the origin of the DockEvent's node.
@@ -225,6 +242,7 @@ public class DockEvent extends Event {
     /**
      * Constructs new DockEvent event..
      *
+     * @param stage The stage of the originator of the event.
      * @param eventType The type of the event.
      * @param x The x with respect to the source. Should be in scene coordinates if source == null
      * or source is not a Node.
@@ -235,14 +253,15 @@ public class DockEvent extends Event {
      * @param pickResult pick result. Can be null, in this case a 2D pick result without any further
      * values is constructed based on the scene coordinates
      */
-    public DockEvent(EventType<? extends DockEvent> eventType, double x, double y, double screenX,
+    public DockEvent(Stage stage, EventType<? extends DockEvent> eventType, double x, double y, double screenX,
             double screenY, PickResult pickResult) {
-        this(null, null, eventType, x, y, screenX, screenY, pickResult);
+        this(stage, null, null, eventType, x, y, screenX, screenY, pickResult);
     }
 
     /**
      * Constructs new DockEvent event..
      *
+     * @param stage The stage of the originator of the event.
      * @param source the source of the event. Can be null.
      * @param target the target of the event. Can be null.
      * @param eventType The type of the event.
@@ -255,14 +274,15 @@ public class DockEvent extends Event {
      * @param pickResult pick result. Can be null, in this case a 2D pick result without any further
      * values is constructed based on the scene coordinates
      */
-    public DockEvent(Object source, EventTarget target, EventType<? extends DockEvent> eventType,
+    public DockEvent(Stage stage, Object source, EventTarget target, EventType<? extends DockEvent> eventType,
             double x, double y, double screenX, double screenY, PickResult pickResult) {
-        this(source, target, eventType, x, y, screenX, screenY, pickResult, null);
+        this(stage, source, target, eventType, x, y, screenX, screenY, pickResult, null);
     }
 
     /**
      * Constructs new DockEvent event..
      *
+     * @param stage The stage of the originator of the event.
      * @param source the source of the event. Can be null.
      * @param target the target of the event. Can be null.
      * @param eventType The type of the event.
@@ -276,9 +296,10 @@ public class DockEvent extends Event {
      * values is constructed based on the scene coordinates
      * @param contents The contents being dragged during this event.
      */
-    public DockEvent(Object source, EventTarget target, EventType<? extends DockEvent> eventType,
+    public DockEvent(Stage stage, Object source, EventTarget target, EventType<? extends DockEvent> eventType,
             double x, double y, double screenX, double screenY, PickResult pickResult, Node contents) {
         super(source, target, eventType);
+        this.stage = stage;
         this.x = x;
         this.y = y;
         this.screenX = screenX;
@@ -292,5 +313,4 @@ public class DockEvent extends Event {
         this.z = p.getZ();
         this.contents = contents;
     }
-
 }

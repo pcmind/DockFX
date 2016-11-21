@@ -146,13 +146,13 @@ public class DockPaneTitleBar extends DockTitleBar {
 
             // TODO: change the pick result by adding a copyForPick()
             DockEvent dockEnterEvent
-                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_ENTER, event.getX(),
+                    = new DockEvent(this.getStage(), this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_ENTER, event.getX(),
                             event.getY(), event.getScreenX(), event.getScreenY(), null);
             DockEvent dockOverEvent
-                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_OVER, event.getX(),
+                    = new DockEvent(this.getStage(), this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_OVER, event.getX(),
                             event.getY(), event.getScreenX(), event.getScreenY(), null);
             DockEvent dockExitEvent
-                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_EXIT, event.getX(),
+                    = new DockEvent(this.getStage(), this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_EXIT, event.getX(),
                             event.getY(), event.getScreenX(), event.getScreenY(), null);
 
             DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {
@@ -184,7 +184,7 @@ public class DockPaneTitleBar extends DockTitleBar {
             dragging = false;
 
             DockEvent dockReleasedEvent
-                    = new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_RELEASED, event.getX(),
+                    = new DockEvent(this.getStage(), this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_RELEASED, event.getX(),
                             event.getY(), event.getScreenX(), event.getScreenY(), null, dockPane);
 
             DockTitleBar.EventTask eventTask = new DockTitleBar.EventTask() {

@@ -1038,6 +1038,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
                 dockIndicatorOverlay
                         .show(DockPane.this, originToScreen.getX(), originToScreen.getY());
+                event.getStage().toFront();
             }
         } else if (event.getEventType() == DockEvent.DOCK_OVER) {
             this.receivedEnter = false;
@@ -1101,9 +1102,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
                 if (!dockIndicatorPopup.isShowing()) {
                     dockIndicatorPopup.show(DockPane.this, posX, posY);
+                    event.getStage().toFront();
                 } else {
                     dockIndicatorPopup.setX(posX);
                     dockIndicatorPopup.setY(posY);
+                    event.getStage().toFront();
                 }
 
                 // set visible after moving the popup
