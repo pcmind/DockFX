@@ -452,31 +452,49 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
           split.setOrientation(requestedOrientation);
           pane = split;
         }
-
       } else if (pane instanceof ContentTabPane) {
-        ContentSplitPane split = (ContentSplitPane) pane.getContentParent();
 
-        // if the orientation is different then reparent the split pane
-        if (split.getOrientation() != requestedOrientation) {
-          ContentSplitPane splitPane = new ContentSplitPane();
-          if (split == root && sibling == root) {
-            this.getChildren().set(this.getChildren().indexOf(root), splitPane);
-            splitPane.getItems().add(split);
-            root = splitPane;
-          } else {
-            pane.setContentParent(splitPane);
-            sibling = (Node) pane;
-            split.set(sibling, splitPane);
-            splitPane.setContentParent(split);
-            splitPane.getItems().add(sibling);
+        if( pane.getContentParent() != null )
+        {
+          ContentSplitPane split = ( ContentSplitPane ) pane.getContentParent();
+
+          // if the orientation is different then reparent the split pane
+          if ( split.getOrientation() != requestedOrientation )
+          {
+            ContentSplitPane splitPane = new ContentSplitPane();
+            if ( split == root && sibling == root )
+            {
+              this.getChildren().set( this.getChildren().indexOf( root ), splitPane );
+              splitPane.getItems().add( split );
+              root = splitPane;
+            }
+            else
+            {
+              pane.setContentParent( splitPane );
+              sibling = ( Node ) pane;
+              split.set( sibling, splitPane );
+              splitPane.setContentParent( split );
+              splitPane.getItems().add( sibling );
+            }
+            split = splitPane;
           }
-          split = splitPane;
-        } else {
-          sibling = (Node) pane;
-        }
+          else
+          {
+            sibling = ( Node ) pane;
+          }
 
-        split.setOrientation(requestedOrientation);
-        pane = split;
+          split.setOrientation( requestedOrientation );
+          pane = split;
+        } else {
+          ContentSplitPane split = new ContentSplitPane();
+
+          pane.setContentParent( split );
+          sibling = ( Node ) pane;
+          split.getItems().add( sibling );
+
+          split.setOrientation( requestedOrientation );
+          pane = split;
+        }
       }
     }
 
@@ -839,13 +857,13 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     // Restore dock location based on the preferences
     // Make it sorted
     ContentHolder rootHolder = contents.get("0");
-    Node newRoot = buildPane(rootHolder, dockNodes, delayOpenHandler);
+    Node newRoot = buildPane(null, rootHolder, dockNodes, delayOpenHandler);
 
     this.root = newRoot;
     this.getChildren().set(0, this.root);
   }
 
-  private Node buildPane(ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
+  private Node buildPane(ContentPane parent, ContentHolder holder, HashMap<String, DockNode> dockNodes, DelayOpenHandler delayOpenHandler) {
     Node pane = null;
     if (holder.getType().equals(ContentHolder.Type.SplitPane)) {
       ContentSplitPane splitPane = new ContentSplitPane();
@@ -879,10 +897,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
           }
         } else if (item instanceof ContentHolder) {
           // Call this function recursively
-          splitPane.getItems().add(buildPane((ContentHolder) item, dockNodes, delayOpenHandler));
+          splitPane.getItems().add(buildPane(splitPane, (ContentHolder) item, dockNodes, delayOpenHandler));
         }
       }
-
+      if(parent != null) splitPane.setContentParent( parent );
       pane = splitPane;
     } else if (holder.getType().equals(ContentHolder.Type.TabPane)) {
       ContentTabPane tabPane = new ContentTabPane();
@@ -908,6 +926,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
       }
 
+      if(parent != null) tabPane.setContentParent( parent );
       tabPane.getSelectionModel().select((int) holder.getProperties().get("SelectedIndex"));
       pane = tabPane;
     }
