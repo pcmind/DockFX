@@ -57,15 +57,15 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
   /**
    * The DockNode this node is a title bar for.
    */
-  private DockNode dockNode;
+  private final DockNode dockNode;
   /**
    * The label node used for captioning and the graphic.
    */
-  private Label label;
+  private final Label label;
   /**
    * State manipulation buttons including close, maximize, detach, and restore.
    */
-  private Button closeButton, stateButton, minimizeButton;
+  private final Button closeButton, stateButton, minimizeButton;
 
   /**
    * Creates a default DockTitleBar with captions and dragging behavior.
@@ -359,8 +359,8 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
           dockPane.addEventFilter(MouseEvent.MOUSE_RELEASED, this);
         }
       } else if (dockNode.isMaximized()) {
-        double ratioX = event.getX() / this.getDockNode().getWidth();
-        double ratioY = event.getY() / this.getDockNode().getHeight();
+        double ratioX = event.getX() / dockNode.getWidth();
+        double ratioY = event.getY() / dockNode.getHeight();
 
         // Please note that setMaximized is ruined by width and height changes occurring on the
         // stage and there is currently a bug report filed for this though I did not give them an
