@@ -359,8 +359,8 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
           dockPane.addEventFilter(MouseEvent.MOUSE_RELEASED, this);
         }
       } else if (dockNode.isMaximized()) {
-        double ratioX = event.getX() / dockNode.getWidth();
-        double ratioY = event.getY() / dockNode.getHeight();
+        double ratioX = event.getX() / this.getDockNode().getWidth();
+        double ratioY = event.getY() / this.getDockNode().getHeight();
 
         // Please note that setMaximized is ruined by width and height changes occurring on the
         // stage and there is currently a bug report filed for this though I did not give them an

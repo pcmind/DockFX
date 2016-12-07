@@ -111,9 +111,8 @@
 
 .dock-node-border {
   -fx-padding: 5;
-  -fx-border-color: #ABABAB;
+  -fx-border-color: c5c5c5;
   -fx-border-radius: 5;
-  -fx-background-radius: 5;
   -fx-effect: dropshadow( three-pass-box, rgba(0,0,0,0.4), 10,0.2,0,0 );
 }
 
@@ -127,7 +126,7 @@
  */
 .dock-node {
   -fx-background-color: -fx-background;
-  -fx-background-radius: 5;
+  -fx-border-radius: 5;
 }
 
 /* In order to support TabPane, titleBar's background color is transparent
