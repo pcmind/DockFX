@@ -74,6 +74,12 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * The current root node of this dock pane's layout.
    */
   private Node root;
+  
+  /** 
+   * Whether or not this dock pane allows the docking of dock nodes from 
+   * external sources (i.e., other dock panes).
+   */
+  private boolean exclusive = false;
 
   /**
    * Whether a DOCK_ENTER event has been received by this dock pane since the last DOCK_EXIT event
@@ -296,6 +302,25 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     dockAreaIndicator.getStyleClass().add("dock-area-indicator");
 
     undockedNodes = FXCollections.observableArrayList();
+  }
+
+  /**
+   * Indicates whether or not the dock pane is in exclusive mode (the 
+   * default).  In exclusive mode, the dock pane ignores dock nodes 
+   * dragged from other dock panes, and dock nodes dragged from this dock pane
+   * are ignored by other dock panes.
+   * @return true or false. 
+   */
+  public boolean isExclusive() {
+    return exclusive;
+  }
+
+  /**
+   * Enables/disables exclusive mode.
+   * @param exclusive true for exclusive mode, and false otherwise.
+   */
+  public void setExclusive(boolean exclusive) {
+    this.exclusive = exclusive;
   }
 
   /**
@@ -558,6 +583,21 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
   @Override
   public void handle(DockEvent event) {
+    // handle exclusive mode.
+    DockPane otherPane = ((DockNode)event.getContents()).getDockPane();
+
+    if (otherPane != this) {
+      if (isExclusive()) {
+        // Can't accept nodes from other dock panes.
+        return;
+      }
+
+      if (otherPane != null && otherPane.isExclusive()) {
+        // Nodes from the other pane cannot be docked elsewhere.
+        return;
+      }
+    }
+        
     if (event.getEventType() == DockEvent.DOCK_ENTER) {
       if (!dockIndicatorOverlay.isShowing()) {
         Point2D originToScreen;
