@@ -724,6 +724,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
           floatingNodes.get(i).getLayoutBounds().getWidth(),
           floatingNodes.get(i).getLayoutBounds().getHeight()
       });
+      floatingNode.addProperty("Minimized", floatingNodes.get(i).isMinimized());
 
       Point2D
           loc =
@@ -877,6 +878,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       String title = holder.getProperties().getProperty("Title");
       Double[] size = (Double[]) holder.getProperties().get("Size");
       Double[] position = (Double[]) holder.getProperties().get("Position");
+      boolean minimized = (boolean) holder.getProperties().getOrDefault( "Minimized", false );
       DockNode node = dockNodes.get(title);
       if(null == node && null != delayOpenHandler)
         node = delayOpenHandler.open(title);
@@ -891,6 +893,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         node.getStage().setHeight(size[1]);
 
         dockNodes.remove(title);
+
+        node.setMinimized( minimized );
       }
       else {
         System.err.println(item + " is not present.");

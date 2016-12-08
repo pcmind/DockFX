@@ -123,25 +123,37 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
     Pane fillPane = new Pane();
     HBox.setHgrow(fillPane, Priority.ALWAYS);
 
-	  dockNode.closableProperty().addListener( new ChangeListener< Boolean >()
-	  {
-		  @Override public void changed( ObservableValue< ? extends Boolean > observable, Boolean oldValue, Boolean newValue )
-		  {
-			  if(newValue)
-			  {
-				  if(!getChildren().contains( closeButton ))
-					getChildren().add(closeButton);
-			  }
-			  else
-			  {
-				  getChildren().removeIf( c -> c.equals( closeButton ) );
-			  }
-		  }
-	  } );
+    dockNode.closableProperty().addListener( new ChangeListener< Boolean >()
+    {
+      @Override public void changed( ObservableValue< ? extends Boolean > observable, Boolean oldValue, Boolean newValue )
+      {
+        if(newValue)
+        {
+          if(!getChildren().contains( closeButton ))
+            getChildren().add( closeButton );
+        }
+        else
+        {
+          getChildren().removeIf( c -> c.equals( closeButton ) );
+        }
+      }
+    } );
 
-	  super.getChildren().addAll(label, fillPane, minimizeButton, stateButton, closeButton);
-
-
+    dockNode.minimizableProperty().addListener( new ChangeListener< Boolean >()
+    {
+      @Override public void changed( ObservableValue< ? extends Boolean > observable, Boolean oldValue, Boolean newValue )
+      {
+        if(newValue)
+        {
+          getChildren().add(2, minimizeButton);
+        }
+        else
+        {
+          getChildren().remove( minimizeButton );
+        }
+      }
+    } );
+    getChildren().addAll( label, fillPane, stateButton, closeButton );
   }
 
   /**
@@ -188,7 +200,7 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
    * @return The button used for minimizing this title bar and its associated dock node.
    */
   public final Button getMinimizeButton() {
-      return minimizeButton;
+    return minimizeButton;
   }
 
   /**
