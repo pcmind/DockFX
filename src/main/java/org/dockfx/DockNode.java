@@ -317,9 +317,14 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * @param translation null The offset of the node after being set floating. Used for aligning it
    *        with its layout bounds inside the dock pane when it becomes detached. Can be null
    *        indicating no translation.
+   * @param newDockPane the parent Dock Pane to associate with if not already set
    */
-  public void setFloating(boolean floating, Point2D translation) {
+  public void setFloating(boolean floating, Point2D translation, DockPane newDockPane) {
     if (floating && !this.isFloating()) {
+      if (null == dockPane) {
+        dockPane = newDockPane;
+      }
+
       // position the new stage relative to the old scene offset
       Point2D floatScene = this.localToScene(0, 0);
       Point2D floatScreen = this.localToScreen(0, 0);
@@ -345,6 +350,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       // this is useful for when the user presses the + sign and we have no information
       // on where the mouse was clicked
       Point2D stagePosition;
+      boolean translateToCenter = false;
       if (this.isDecorated()) {
         Window owner = stage.getOwner();
         stagePosition = floatScene.add(new Point2D(owner.getX(), owner.getY()));
@@ -352,11 +358,21 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		  // using coordinates the component was previously in (if available)
 		  stagePosition = floatScreen;
 	  } else {
-		  // using the center of the screen if no relative position is available
-		  Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
-		  double centerX = (primScreenBounds.getWidth() - Math.max(getWidth(), getMinWidth())) / 2;
-		  double centerY = (primScreenBounds.getHeight() - Math.max(getHeight(), getMinHeight())) / 2;
-		  stagePosition = new Point2D(centerX, centerY);
+            translateToCenter = true;
+
+            if (null != dockPane) {
+              Window rootWindow = dockPane.getScene().getWindow();
+              double centerX = rootWindow.getX() + (rootWindow.getWidth() / 2);
+              double centerY = rootWindow.getY() + (rootWindow.getHeight() / 2);
+              stagePosition = new Point2D(centerX, centerY);
+            }
+            else {
+              // using the center of the screen if no relative position is available
+              Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
+              double centerX = (primScreenBounds.getWidth() - Math.max(getWidth(), getMinWidth())) / 2;
+              double centerY = (primScreenBounds.getHeight() - Math.max(getHeight(), getMinHeight())) / 2;
+              stagePosition = new Point2D(centerX, centerY);
+            }
 	  }
 
       if (translation != null) {
@@ -387,16 +403,21 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       double insetsWidth = insetsDelta.getLeft() + insetsDelta.getRight();
       double insetsHeight = insetsDelta.getTop() + insetsDelta.getBottom();
 
-      stage.setX(stagePosition.getX() - insetsDelta.getLeft());
-      stage.setY(stagePosition.getY() - insetsDelta.getTop());
-
-      //stage.setMinWidth(borderPane.minWidth(this.getHeight()) + insetsWidth);
-      //stage.setMinHeight(borderPane.minHeight(this.getWidth()) + insetsHeight);
-
-      borderPane.setPrefSize(this.getWidth() + insetsWidth, this.getHeight() + insetsHeight);
-
       stage.setScene(scene);
 
+      stage.setMinWidth(borderPane.minWidth(this.getMinWidth()) + insetsWidth);
+      stage.setMinHeight(borderPane.minHeight(this.getMinHeight()) + insetsHeight);
+      borderPane.setPrefSize(this.getPrefWidth() + insetsWidth, this.getPrefHeight() + insetsHeight);
+
+      if (translateToCenter) {
+        // we are floating over the center of some parent, therefore align our center with theirs
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft() - (borderPane.getPrefWidth()/2.0));
+        stage.setY(stagePosition.getY() - insetsDelta.getTop() - (borderPane.getPrefHeight()/2.0));
+      } else {
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft());
+        stage.setY(stagePosition.getY() - insetsDelta.getTop());
+      }
+      
       if (stageStyle == StageStyle.TRANSPARENT) {
         scene.setFill(null);
       }
@@ -413,6 +434,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       // size
       stage.sizeToScene();
 
+      layout();
+      
       stage.show();
     } else if (!floating && this.isFloating()) {
       this.floatingProperty.set(floating);
@@ -431,7 +454,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * @param floating Whether the node is currently floating.
    */
   public void setFloating(boolean floating) {
-    setFloating(floating, null);
+    setFloating(floating, null, dockPane);
   }
 
   /**

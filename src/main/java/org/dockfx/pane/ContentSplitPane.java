@@ -182,7 +182,7 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
 
   @Override
   protected double computeMaxWidth(double height) {
-        if (getOrientation() == Orientation.VERTICAL) {
+        if ((getOrientation() == Orientation.VERTICAL) && (!getItems().isEmpty())) {
             return getItems().stream().map(i -> i.maxWidth(height)).min(Comparator.naturalOrder()).get();
         }
         

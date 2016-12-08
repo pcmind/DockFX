@@ -321,7 +321,7 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
         // then we need to offset the stage position by
         // the height of this title bar
         if (!dockNode.isCustomTitleBar() && dockNode.isDecorated()) {
-          dockNode.setFloating(true, new Point2D(0, DockTitleBar.this.getHeight()));
+          dockNode.setFloating(true, new Point2D(0, DockTitleBar.this.getHeight()), null);
         } else {
           dockNode.setFloating(true);
         }
@@ -373,6 +373,12 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
       Stage stage = dockNode.getStage();
       Insets insetsDelta = this.getDockNode().getBorderPane().getInsets();
 
+      // it is possible that drag start has not been set if some other node had focus when
+      // we started the drag
+      if (null == dragStart) {
+        dragStart = new Point2D(event.getX(), event.getY());
+      }
+      
       // dragging this way makes the interface more responsive in the event
       // the system is lagging as is the case with most current JavaFX
       // implementations on Linux
