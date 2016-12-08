@@ -407,7 +407,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 
       stage.setMinWidth(borderPane.minWidth(this.getMinWidth()) + insetsWidth);
       stage.setMinHeight(borderPane.minHeight(this.getMinHeight()) + insetsHeight);
-      borderPane.setPrefSize(this.getPrefWidth() + insetsWidth, this.getPrefHeight() + insetsHeight);
+      borderPane.setPrefSize(this.getWidth() + insetsWidth, this.getHeight() + insetsHeight);
 
       if (translateToCenter) {
         // we are floating over the center of some parent, therefore align our center with theirs
