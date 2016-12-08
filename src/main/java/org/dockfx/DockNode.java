@@ -61,7 +61,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   /**
    * The style this dock node should use on its stage when set to floating.
    */
-  private StageStyle stageStyle = StageStyle.UNDECORATED;
+  private StageStyle stageStyle = StageStyle.TRANSPARENT;
   /**
    * The stage that this dock node is currently using when floating.
    */
@@ -938,8 +938,6 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	this.closedProperty.set(true);
     if (isFloating()) {
       setFloating(false);
-    } else if(isMinimized()) {
-//      System.out.println("test");
     } else if (isDocked()) {
       undock();
     }
