@@ -61,7 +61,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   /**
    * The style this dock node should use on its stage when set to floating.
    */
-  private StageStyle stageStyle = StageStyle.TRANSPARENT;
+  private StageStyle stageStyle = StageStyle.UNDECORATED;
   /**
    * The stage that this dock node is currently using when floating.
    */
