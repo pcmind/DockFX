@@ -388,13 +388,13 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
       // TODO: change the pick result by adding a copyForPick()
       DockEvent dockEnterEvent =
           new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_ENTER, event.getX(),
-              event.getY(), event.getScreenX(), event.getScreenY(), null);
+              event.getY(), event.getScreenX(), event.getScreenY(), null, this.getDockNode());
       DockEvent dockOverEvent =
           new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_OVER, event.getX(),
-              event.getY(), event.getScreenX(), event.getScreenY(), null);
+              event.getY(), event.getScreenX(), event.getScreenY(), null, this.getDockNode());
       DockEvent dockExitEvent =
           new DockEvent(this, DockEvent.NULL_SOURCE_TARGET, DockEvent.DOCK_EXIT, event.getX(),
-              event.getY(), event.getScreenX(), event.getScreenY(), null);
+              event.getY(), event.getScreenX(), event.getScreenY(), null, this.getDockNode());
 
       EventTask eventTask = new EventTask() {
         @Override
