@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Stack;
 
 import com.sun.javafx.css.StyleManager;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -1136,7 +1137,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
     }
 
-    public void storeLayout(String filePath) {
+    public void storeLayout(String filePath) throws FileNotFoundException {
         storeLayout(filePath, generateLayout());
     }
 
@@ -1176,13 +1177,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         return contents;
     }
 
-    public static void storeLayout(String fileName, Map<String, ContentHolder> contents) {
+    public static void storeLayout(String fileName, Map<String, ContentHolder> contents) throws FileNotFoundException {
         try (XMLEncoder e = new XMLEncoder(
                 new BufferedOutputStream(
                         new FileOutputStream(fileName)))) {
             e.writeObject(contents);
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
         }
     }
 
@@ -1239,7 +1238,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     public void loadAndApplyLayout(String filePath, DelayOpenHandler delayOpenHandler) throws FileNotFoundException {
-        loadAndApplyLayout(new BufferedInputStream(new FileInputStream(filePath)), delayOpenHandler);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            loadAndApplyLayout(new BufferedInputStream(fis), delayOpenHandler);
+        }
+        catch (FileNotFoundException ex) {
+            throw ex;
+        }
+        catch (IOException ex) {
+        }
     }
 
     public void loadAndApplyLayout(InputStream is, DelayOpenHandler delayOpenHandler) {
@@ -1253,13 +1259,22 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     public static HashMap<String, ContentHolder> loadLayout(String filePath) throws FileNotFoundException {
-        return loadLayout(new BufferedInputStream(new FileInputStream(filePath)));
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            return loadLayout(new BufferedInputStream(fis));
+        }
+        catch (FileNotFoundException ex) {
+            throw ex;
+        }
+        catch (IOException ex) {
+            return null;
+        }
     }
 
     public static HashMap<String, ContentHolder> loadLayout(InputStream is) {
         try (XMLDecoder e = new XMLDecoder(is)) {
             return (HashMap<String, ContentHolder>) e.readObject();
-        } catch (ArrayIndexOutOfBoundsException ex) {
+        }
+        catch (ArrayIndexOutOfBoundsException ex) {
             // empty file
         }
 
