@@ -137,6 +137,11 @@ public abstract class DockTitleBar extends HBox implements EventHandler<MouseEve
 
     protected abstract void handleCloseAction();
 
+    protected final void unbindLabelGraphic() {
+        label.graphicProperty().unbind();
+        label.setGraphic(null);
+    }
+
     /**
      * The mouse location of the original click which we can use to determine the offset during
      * drag. Title bar dragging is asynchronous so it will not be negatively impacted by less

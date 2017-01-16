@@ -63,6 +63,21 @@ public class DockNodeTitleBar extends DockTitleBar {
         });
     }
 
+    protected void bindLabelGraphic() {
+        unbindLabelGraphic();
+        label.setGraphic(dockNode.getGraphic());
+        label.graphicProperty().bind(dockNode.graphicProperty());
+    }
+
+    protected void bindLabelGraphic(DockPane pane) {
+        if (pane.getDockTitleBar().label.getGraphic() == dockNode.getGraphic()) {
+            pane.getDockTitleBar().unbindLabelGraphic();
+        }
+        unbindLabelGraphic();
+        label.setGraphic(dockNode.getGraphic());
+        label.graphicProperty().bind(dockNode.graphicProperty());
+    }
+
     @Override
     protected void handleButtonAction() {
         if (dockNode.getDockPane().isFloating() && dockNode.getDockPane().isOnlyChild(dockNode)) {

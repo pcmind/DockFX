@@ -504,6 +504,10 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         return dockAreaStrokeTimeline;
     }
 
+    public DockPaneTitleBar getDockTitleBar() {
+        return dockTitleBar;
+    }
+
     /**
      * The stage style that will be used when the dock node is floating. This must be set prior to
      * setting the dock node to floating.
@@ -833,7 +837,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
 
         // link out title bar text and graphic to the nodes as there is only a single
-        dockTitleBar.mirrorNodeTitleBar(node);
+        dockTitleBar.mirrorNodeTitleBar(null, node);
         node.showTitleBar(false);
     }
 
@@ -845,8 +849,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         // if we already only have a single child then we need to switch on its titlebar
         DockNode onlyChild = getOnlyChild();
         if (null != onlyChild) {
+            dockTitleBar.mirrorNodeTitleBar(onlyChild, null);
             onlyChild.showTitleBar(true);
-            dockTitleBar.mirrorNodeTitleBar(null);
         }
 
         ContentPane pane = (ContentPane) root;
@@ -955,7 +959,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         if (isFloating()) {
             DockNode newOnlyChild = getOnlyChild();
             if (null != newOnlyChild) {
-                dockTitleBar.mirrorNodeTitleBar(newOnlyChild);
+                dockTitleBar.mirrorNodeTitleBar(null, newOnlyChild);
             }
         }
     }
@@ -1021,7 +1025,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             DockNode onlyChild = getOnlyChild();
             if (null != onlyChild) {
                 onlyChild.showTitleBar(false);
-                dockTitleBar.mirrorNodeTitleBar(onlyChild);
+                dockTitleBar.mirrorNodeTitleBar(node, onlyChild);
             }
         }
     }

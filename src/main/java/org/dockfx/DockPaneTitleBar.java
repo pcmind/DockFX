@@ -53,14 +53,23 @@ public class DockPaneTitleBar extends DockTitleBar {
         this.dockPane = dockPane;
     }
 
-    public void mirrorNodeTitleBar(DockNode node) {
-        if (null != node) {
+    public void mirrorNodeTitleBar(DockNode oldNode, DockNode newNode) {
+        if ((null != oldNode) && (null != label.getGraphic()))
+        {
+            // return title bar graphic if we have one to the previous dock node
+            unbindLabelGraphic();
+            oldNode.getDockTitleBar().bindLabelGraphic();
+        }
+        
+        if (null != newNode) {
+            newNode.getDockTitleBar().unbindLabelGraphic();
+            
             label.textProperty().unbind();
             label.graphicProperty().unbind();
-            label.setText(node.getTitle());
-            label.setGraphic(node.getGraphic());
-            label.textProperty().bind(node.titleProperty());
-            label.graphicProperty().bind(node.graphicProperty());
+            label.setText(newNode.getTitle());
+            label.setGraphic(newNode.getGraphic());
+            label.textProperty().bind(newNode.titleProperty());
+            label.graphicProperty().bind(newNode.graphicProperty());
         } else {
             label.textProperty().unbind();
             label.graphicProperty().unbind();

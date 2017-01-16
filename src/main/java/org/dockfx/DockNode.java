@@ -185,7 +185,8 @@ public class DockNode extends VBox {
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.load(DockNode.class.getResourceAsStream(FXMLPath));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             loader.setRoot(new StackPane(new Label("Could not load FXML file")));
         }
@@ -260,6 +261,9 @@ public class DockNode extends VBox {
 
     public void showTitleBar(boolean show) {
         if (null != dockTitleBar) {
+            if (show) {
+                dockTitleBar.bindLabelGraphic(dockPane);
+            }
             dockTitleBar.setVisible(show);
             dockTitleBar.setManaged(show);
         }
@@ -342,7 +346,7 @@ public class DockNode extends VBox {
      *
      * @return The dock title bar associated with this node.
      */
-    public final DockTitleBar getDockTitleBar() {
+    public final DockNodeTitleBar getDockTitleBar() {
         return this.dockTitleBar;
     }
 
