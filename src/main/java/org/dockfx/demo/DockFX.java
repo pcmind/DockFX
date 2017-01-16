@@ -113,7 +113,12 @@ public class DockFX extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if (dirExist(getUserDataDirectory())) {
-                    dockPane.storeLayout(getUserDataDirectory() + "dock.pref");
+                    try {
+                        dockPane.storeLayout(getUserDataDirectory() + "dock.pref");
+                    }
+                    catch (FileNotFoundException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
         });
