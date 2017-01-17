@@ -20,7 +20,6 @@ import javafx.scene.control.SplitPane;
  * @author HongKee Moon
  */
 public class ContentSplitPane extends SplitPane implements ContentPane {
-
     /**
      * The Parent.
      */

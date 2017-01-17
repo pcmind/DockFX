@@ -49,7 +49,6 @@ import javafx.stage.Window;
  * @since DockFX 0.1
  */
 public abstract class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
-
     /**
      * The label node used for captioning and the graphic.
      */

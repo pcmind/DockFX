@@ -20,6 +20,7 @@
  */
 package org.dockfx;
 
+import javafx.stage.WindowEvent;
 import org.dockfx.viewControllers.DockFXViewController;
 
 import javafx.beans.property.BooleanProperty;

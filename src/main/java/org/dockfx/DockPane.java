@@ -401,7 +401,6 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                     DockPane.this.dockNodeDrag = null;
                 }
             }
-
         });
 
         dockIndicatorPopup = new Popup();
