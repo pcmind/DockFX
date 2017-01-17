@@ -1,5 +1,7 @@
 package org.dockfx.pane;
 
+import java.util.Comparator;
+import org.dockfx.DockNode;
 import org.dockfx.DockPos;
 
 import java.util.List;
@@ -85,9 +87,24 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
         return true;
       } else if (children.get(i) instanceof ContentPane) {
         pane = (ContentPane) children.get(i);
-        if (pane.removeNode(stack, node) && pane.getChildrenList().size() < 1) {
-          getItems().remove(i);
-          return true;
+        if(pane.removeNode(stack, node))
+        {
+          if( pane.getChildrenList().size() < 1) {
+            getItems().remove(i);
+            return true;
+            }
+          else if(pane.getChildrenList().size() == 1 &&
+              pane instanceof ContentTabPane &&
+              pane.getChildrenList().get(0) instanceof DockNode)
+          {
+            List<Node> childrenList = pane.getChildrenList();
+            Node sibling = childrenList.get(0);
+            ContentPane contentParent = pane.getContentParent();
+
+            contentParent.set((Node) pane, sibling);
+            ((DockNode)sibling).tabbedProperty().setValue(false);
+            return true;
+          }
         }
       }
     }
@@ -157,5 +174,14 @@ public class ContentSplitPane extends SplitPane implements ContentPane {
         }
       }
     }
+  }
+
+  @Override
+  protected double computeMaxWidth(double height) {
+        if ((getOrientation() == Orientation.VERTICAL) && (!getItems().isEmpty())) {
+            return getItems().stream().map(i -> i.maxWidth(height)).min(Comparator.naturalOrder()).get();
+        }
+        
+        return super.computeMaxWidth(height);
   }
 }

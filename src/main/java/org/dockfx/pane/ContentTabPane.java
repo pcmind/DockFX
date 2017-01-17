@@ -1,5 +1,6 @@
 package org.dockfx.pane;
 
+import java.util.Comparator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPos;
 
@@ -10,7 +11,6 @@ import java.util.stream.Collectors;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
 /**
@@ -77,6 +77,7 @@ public class ContentTabPane extends TabPane implements ContentPane {
   public void set(int idx, Node node) {
     DockNode newNode = (DockNode) node;
     getTabs().set(idx, new DockNodeTab(newNode));
+	getSelectionModel().select( idx );
   }
 
   public void set(Node sibling, Node node) {
@@ -89,6 +90,18 @@ public class ContentTabPane extends TabPane implements ContentPane {
 
   public void addNode(Node root, Node sibling, Node node, DockPos dockPos) {
     DockNode newNode = (DockNode) node;
-    getTabs().add(new DockNodeTab(newNode));
+	DockNodeTab t = new DockNodeTab(newNode);
+	addDockNodeTab( t );
+  }
+
+  public void addDockNodeTab(DockNodeTab dockNodeTab)
+  {
+	  getTabs().add(dockNodeTab);
+	  getSelectionModel().select( dockNodeTab );
+  }
+
+  @Override
+  protected double computeMaxWidth(double height) {
+    return getTabs().stream().map(i -> i.getContent().maxWidth(height)).min(Comparator.naturalOrder()).get();
   }
 }

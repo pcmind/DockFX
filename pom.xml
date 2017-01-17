@@ -6,9 +6,9 @@
     <groupId>org.dockfx</groupId>
     <artifactId>DockFX</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.1</version>
+    <version>0.1.8</version>
     <name>DockFX</name>
-    <url>https://github.com/RobertBColton/DockFX.git</url>
+    <url>https://github.com/ClearControl/DockFX.git</url>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -72,6 +72,14 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>bintray-clearcontrol-ClearControl</id>
+            <name>clearcontrol-ClearControl</name>
+            <url>https://api.bintray.com/maven/clearcontrol/ClearControl/DockFX/;publish=1</url>
+        </repository>
+    </distributionManagement>
 
     <reporting>
         <plugins>

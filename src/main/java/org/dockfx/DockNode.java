@@ -20,6 +20,9 @@
 
 package org.dockfx;
 
+import javafx.stage.WindowEvent;
+import org.dockfx.viewControllers.DockFXViewController;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,20 +31,24 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import org.dockfx.pane.DockNodeTab;
 
 /**
  * Base class for a dock node that provides the layout of the content along with a title bar and a
@@ -54,7 +61,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   /**
    * The style this dock node should use on its stage when set to floating.
    */
-  private StageStyle stageStyle = StageStyle.TRANSPARENT;
+  private StageStyle stageStyle = StageStyle.UNDECORATED;
   /**
    * The stage that this dock node is currently using when floating.
    */
@@ -77,6 +84,19 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * The dock pane this dock node belongs to when not floating.
    */
   private DockPane dockPane;
+
+  /**
+   * View controller of node inside this DockNode
+   */
+  private DockFXViewController viewController;
+  
+  /**
+   * Keep window state before its maximizing.
+   */
+  private double widthBeforeMaximizing;
+  private double heightBeforeMaximizing;
+  private double xPosBeforeMaximizing;
+  private double yPosBeforeMaximizing;
 
   /**
    * CSS pseudo class selector representing whether this node is currently floating.
@@ -104,8 +124,18 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       if (borderPane != null) {
         borderPane.pseudoClassStateChanged(MAXIMIZED_PSEUDO_CLASS, get());
       }
-
-      stage.setMaximized(get());
+      
+      if (!get()) {
+        stage.setX(xPosBeforeMaximizing);
+        stage.setY(yPosBeforeMaximizing);
+        stage.setWidth(widthBeforeMaximizing);
+        stage.setHeight(heightBeforeMaximizing);
+      }else{
+        widthBeforeMaximizing = stage.getWidth();
+        heightBeforeMaximizing = stage.getHeight();
+        xPosBeforeMaximizing = stage.getX();
+        yPosBeforeMaximizing = stage.getY();
+      }
 
       // TODO: This is a work around to fill the screen bounds and not overlap the task bar when
       // the window is undecorated as in Visual Studio. A similar work around needs applied for
@@ -132,6 +162,10 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
     }
   };
 
+  public DockNode(Node contents, String title, Node graphic, DockFXViewController controller) {
+    initializeDockNode(contents, title, graphic, controller);
+  }
+
   /**
    * Creates a default DockNode with a default title bar and layout.
    * 
@@ -142,16 +176,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    *        the title bar and stage.
    */
   public DockNode(Node contents, String title, Node graphic) {
-    this.titleProperty.setValue(title);
-    this.graphicProperty.setValue(graphic);
-    this.contents = contents;
-
-    dockTitleBar = new DockTitleBar(this);
-
-    getChildren().addAll(dockTitleBar, contents);
-    VBox.setVgrow(contents, Priority.ALWAYS);
-
-    this.getStyleClass().add("dock-node");
+    this(contents, title, graphic, null);
   }
 
   /**
@@ -172,6 +197,86 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    */
   public DockNode(Node contents) {
     this(contents, null, null);
+  }
+
+  /**
+   *
+   * Creates a default DockNode with contents loaded from FXMLFile at provided path.
+   *
+   * @param FXMLPath path to fxml file.
+   * @param title The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   * @param graphic The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   */
+  public DockNode(String FXMLPath, String title, Node graphic) {
+    FXMLLoader loader = loadNode(FXMLPath);
+    initializeDockNode(loader.getRoot(), title, graphic, loader.getController());
+  }
+
+  /**
+   * Creates a default DockNode with contents loaded from FXMLFile at provided path.
+   *
+   * @param FXMLPath path to fxml file.
+   * @param title The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   */
+  public DockNode(String FXMLPath, String title) {
+    this(FXMLPath, title, null);
+  }
+
+  /**
+   * Creates a default DockNode with contents loaded from FXMLFile at provided path with default
+   * title bar.
+   *
+   * @param FXMLPath path to fxml file.
+   */
+  public DockNode(String FXMLPath) {
+    this(FXMLPath, null, null);
+  }
+
+  /**
+   * Loads Node from fxml file located at FXMLPath and returns it.
+   *
+   * @param FXMLPath Path to fxml file.
+   * @return Node loaded from fxml file or StackPane with Label with error message.
+   */
+  private static FXMLLoader loadNode(String FXMLPath) {
+    FXMLLoader loader = new FXMLLoader();
+    try {
+      loader.load(DockNode.class.getResourceAsStream(FXMLPath));
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+      loader.setRoot(new StackPane(new Label("Could not load FXML file")));
+    }
+    return loader;
+  }
+
+  /**
+   * Sets DockNodes contents, title and title bar graphic
+   *
+   * @param contents The contents of the dock node which may be a tree or another scene graph node.
+   * @param title The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   * @param graphic The caption title of this dock node which maintains bidirectional state with the
+   * title bar and stage.
+   */
+  private void initializeDockNode(Node contents, String title, Node graphic, DockFXViewController controller) {
+    this.titleProperty.setValue(title);
+    this.graphicProperty.setValue(graphic);
+    this.contents = contents;
+    this.viewController = controller;
+
+    dockTitleBar = new DockTitleBar(this);
+    if (viewController != null) {
+      viewController.setDockTitleBar(dockTitleBar);
+    }
+
+    getChildren().addAll(dockTitleBar, contents);
+    VBox.setVgrow(contents, Priority.ALWAYS);
+
+    this.getStyleClass().add("dock-node");
   }
 
   /**
@@ -231,9 +336,14 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * @param translation null The offset of the node after being set floating. Used for aligning it
    *        with its layout bounds inside the dock pane when it becomes detached. Can be null
    *        indicating no translation.
+   * @param newDockPane the parent Dock Pane to associate with if not already set
    */
-  public void setFloating(boolean floating, Point2D translation) {
+  public void setFloating(boolean floating, Point2D translation, DockPane newDockPane) {
     if (floating && !this.isFloating()) {
+      if (null == dockPane) {
+        dockPane = newDockPane;
+      }
+
       // position the new stage relative to the old scene offset
       Point2D floatScene = this.localToScene(0, 0);
       Point2D floatScreen = this.localToScreen(0, 0);
@@ -247,10 +357,21 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       }
 
       stage = new Stage();
+
+      dockPane.getScene().getWindow().addEventFilter(
+        WindowEvent.WINDOW_CLOSE_REQUEST,
+        new EventHandler<WindowEvent>()
+        {
+          @Override
+          public void handle(WindowEvent event) {
+            stage.close();
+          }
+        });
+
       stage.titleProperty().bind(titleProperty);
       if (dockPane != null && dockPane.getScene() != null
           && dockPane.getScene().getWindow() != null) {
-        stage.initOwner(dockPane.getScene().getWindow());
+        //stage.initOwner(dockPane.getScene().getWindow());
       }
 
       stage.initStyle(stageStyle);
@@ -259,12 +380,31 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       // this is useful for when the user presses the + sign and we have no information
       // on where the mouse was clicked
       Point2D stagePosition;
+      boolean translateToCenter = false;
       if (this.isDecorated()) {
         Window owner = stage.getOwner();
         stagePosition = floatScene.add(new Point2D(owner.getX(), owner.getY()));
-      } else {
-        stagePosition = floatScreen;
-      }
+      } else if (floatScreen != null) {
+		  // using coordinates the component was previously in (if available)
+		  stagePosition = floatScreen;
+	  } else {
+        translateToCenter = true;
+
+        if (null != dockPane) {
+          Window rootWindow = dockPane.getScene().getWindow();
+          double centerX = rootWindow.getX() + (rootWindow.getWidth() / 2);
+          double centerY = rootWindow.getY() + (rootWindow.getHeight() / 2);
+          stagePosition = new Point2D(centerX, centerY);
+        }
+        else {
+          // using the center of the screen if no relative position is available
+          Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
+          double centerX = (primScreenBounds.getWidth() - Math.max(getWidth(), getMinWidth())) / 2;
+          double centerY = (primScreenBounds.getHeight() - Math.max(getHeight(), getMinHeight())) / 2;
+          stagePosition = new Point2D(centerX, centerY);
+        }
+	  }
+
       if (translation != null) {
         stagePosition = stagePosition.add(translation);
       }
@@ -283,6 +423,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       // while it is floating to offset it by the drop shadow
       // this way it pops out above exactly where it was when docked
       this.floatingProperty.set(floating);
+      this.setMinimizable(floating);
       this.applyCss();
 
       // apply the border pane css so that we can get the insets and
@@ -293,16 +434,21 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       double insetsWidth = insetsDelta.getLeft() + insetsDelta.getRight();
       double insetsHeight = insetsDelta.getTop() + insetsDelta.getBottom();
 
-      stage.setX(stagePosition.getX() - insetsDelta.getLeft());
-      stage.setY(stagePosition.getY() - insetsDelta.getTop());
-
-      stage.setMinWidth(borderPane.minWidth(this.getHeight()) + insetsWidth);
-      stage.setMinHeight(borderPane.minHeight(this.getWidth()) + insetsHeight);
-
-      borderPane.setPrefSize(this.getWidth() + insetsWidth, this.getHeight() + insetsHeight);
-
       stage.setScene(scene);
 
+      stage.setMinWidth(borderPane.minWidth(this.getMinWidth()) + insetsWidth);
+      stage.setMinHeight(borderPane.minHeight(this.getMinHeight()) + insetsHeight);
+      borderPane.setPrefSize(this.getWidth() + insetsWidth, this.getHeight() + insetsHeight);
+
+      if (translateToCenter) {
+        // we are floating over the center of some parent, therefore align our center with theirs
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft() - (borderPane.getPrefWidth()/2.0));
+        stage.setY(stagePosition.getY() - insetsDelta.getTop() - (borderPane.getPrefHeight()/2.0));
+      } else {
+        stage.setX(stagePosition.getX() - insetsDelta.getLeft());
+        stage.setY(stagePosition.getY() - insetsDelta.getTop());
+      }
+      
       if (stageStyle == StageStyle.TRANSPARENT) {
         scene.setFill(null);
       }
@@ -322,6 +468,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
       stage.show();
     } else if (!floating && this.isFloating()) {
       this.floatingProperty.set(floating);
+      this.setMinimizable(floating);
 
       stage.removeEventFilter(MouseEvent.MOUSE_PRESSED, this);
       stage.removeEventFilter(MouseEvent.MOUSE_MOVED, this);
@@ -337,7 +484,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * @param floating Whether the node is currently floating.
    */
   public void setFloating(boolean floating) {
-    setFloating(floating, null);
+    setFloating(floating, null, dockPane);
   }
 
   /**
@@ -348,6 +495,15 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    */
   public final DockPane getDockPane() {
     return dockPane;
+  }
+
+  /**
+   * ViewController associated with this dock nodes contents, might be null
+   *
+   * @return ViewController associated with this dock nodes contents
+   */
+  public final DockFXViewController getViewController() {
+    return viewController;
   }
 
   /**
@@ -546,6 +702,48 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   public final void setClosable(boolean closable) {
     this.closableProperty.set(closable);
   }
+  
+  private BooleanProperty minimizedProperty = new SimpleBooleanProperty(false) {
+    @Override
+    public String getName() {
+      return "minimized";
+    }
+  };
+  
+  public final boolean isMinimized(){
+    return minimizedProperty.get();
+  }
+  
+  public final void setMinimized(boolean minimized) {
+    if( null != stage )
+    {
+      stage.setIconified(minimized);
+      this.minimizedProperty.set(minimized);
+    }
+  }
+  
+  /**
+   * Boolean property maintaining whether this node is minimizable.
+   * @return 
+   */
+  public final BooleanProperty minimizableProperty() {
+    return minimizableProperty;
+  }
+  
+  private BooleanProperty minimizableProperty = new SimpleBooleanProperty(false){
+    @Override
+    public String getName() {
+        return "minimizable";
+    }
+  };
+  
+  public final boolean isMinimizable() {
+    return minimizableProperty.get();
+  }
+  
+  public final void setMinimizable(boolean minimizable) {
+    this.minimizableProperty.set(minimizable);
+  }
 
   /**
    * Boolean property maintaining whether this node is currently resizable.
@@ -645,11 +843,44 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   };
 
   public final boolean isTabbed() {
-    return floatingProperty.get();
-  }
+		return tabbedProperty.get();
+	}
 
+	/**
+	 * Boolean property maintaining whether this node is currently closed.
+	 */
+	public final BooleanProperty closedProperty() {
+		return closedProperty;
+	}
 
-  /**
+	private BooleanProperty closedProperty = new SimpleBooleanProperty(false) {
+		@Override
+		protected void invalidated() {
+		}
+
+		@Override
+		public String getName() {
+			return "closed";
+		}
+	};
+
+	public final boolean isClosed() {
+		return closedProperty.get();
+	}
+
+	private DockPos lastDockPos;
+	public DockPos getLastDockPos()
+	{
+		return lastDockPos;
+	}
+
+	private Node lastDockSibling;
+	public Node getLastDockSibling()
+	{
+		return lastDockSibling;
+	}
+
+	/**
    * Dock this node into a dock pane.
    * 
    * @param dockPane The dock pane to dock this node into.
@@ -659,6 +890,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   public void dock(DockPane dockPane, DockPos dockPos, Node sibling) {
     dockImpl(dockPane);
     dockPane.dock(this, dockPos, sibling);
+	this.lastDockPos = dockPos;
+	this.lastDockSibling = sibling;
   }
 
   /**
@@ -670,6 +903,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
   public void dock(DockPane dockPane, DockPos dockPos) {
     dockImpl(dockPane);
     dockPane.dock(this, dockPos);
+	this.lastDockPos = dockPos;
   }
 
   private final void dockImpl(DockPane dockPane) {
@@ -678,6 +912,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
     }
     this.dockPane = dockPane;
     this.dockedProperty.set(true);
+	this.closedProperty.set(false);
   }
 
   /**
@@ -696,11 +931,24 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * pane.
    */
   public void close() {
+	this.closedProperty.set(true);
     if (isFloating()) {
       setFloating(false);
     } else if (isDocked()) {
       undock();
     }
+  }
+
+  private DockNodeTab dockNodeTab;
+  public void setNodeTab( DockNodeTab nodeTab )
+  {
+    this.dockNodeTab = nodeTab;
+  }
+
+  public void focus()
+  {
+	  if( tabbedProperty().get() )
+		  dockNodeTab.select();
   }
 
   /**
