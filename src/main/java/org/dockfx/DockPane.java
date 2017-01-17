@@ -160,7 +160,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
      * dock pane.
      *
      * @param dockRoot Whether this indicator button is used for docking a node relative to the root
-     *                 of the dock pane.
+     *        of the dock pane.
      */
     public final void setDockRoot(boolean dockRoot) {
       this.dockRoot = dockRoot;
@@ -189,7 +189,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
      * dock pane.
      *
      * @return Whether this indicator button is used for docking a node relative to the root of the
-     * dock pane.
+     *         dock pane.
      */
     public final boolean isDockRoot() {
       return dockRoot;
@@ -281,7 +281,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     // TODO: dockCenter goes first when tabs are added in a future version
     dockPosButtons =
         FXCollections.observableArrayList(dockCenter, dockTop, dockRight, dockBottom, dockLeft,
-                                          dockTopRoot, dockRightRoot, dockBottomRoot, dockLeftRoot);
+            dockTopRoot, dockRightRoot, dockBottomRoot, dockLeftRoot);
 
     dockPosIndicator = new GridPane();
     dockPosIndicator.add(dockTop, 1, 0);
@@ -290,8 +290,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     dockPosIndicator.add(dockLeft, 0, 1);
     dockPosIndicator.add(dockCenter, 1, 1);
 
-    dockRootPane.getChildren().addAll(dockAreaIndicator, dockTopRoot, dockRightRoot, dockBottomRoot,
-                                      dockLeftRoot);
+    dockRootPane.getChildren().addAll(dockAreaIndicator, dockTopRoot, dockRightRoot,
+        dockBottomRoot, dockLeftRoot);
 
     dockIndicatorOverlay.getContent().add(dockRootPane);
     dockIndicatorPopup.getContent().addAll(dockPosIndicator);
@@ -328,7 +328,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * dock pane.
    *
    * @return The Timeline used to animate the docking area indicator in the dock indicator overlay
-   * for this dock pane.
+   *         for this dock pane.
    */
   public final Timeline getDockAreaStrokeTimeline() {
     return dockAreaStrokeTimeline;
@@ -347,16 +347,16 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * Helper function to add the default style sheet of DockFX to the user agent style sheets.
    */
   public final static void initializeDefaultUserAgentStylesheet() {
-    StyleManager.getInstance()
-        .addUserAgentStylesheet(DockPane.class.getResource("default.css").toExternalForm());
+    StyleManager.getInstance().addUserAgentStylesheet(
+        DockPane.class.getResource("default.css").toExternalForm());
   }
 
   /**
    * A cache of all dock node event handlers that we have created for tracking the current docking
    * area.
    */
-  private ObservableMap<Node, DockNodeEventHandler> dockNodeEventFilters =
-      FXCollections.observableHashMap();
+  private ObservableMap<Node, DockNodeEventHandler> dockNodeEventFilters = FXCollections
+      .observableHashMap();
 
   /**
    * A wrapper to the type parameterized generic EventHandler that allows us to remove it from its
@@ -377,7 +377,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
      * docking area.
      *
      * @param node The node that is to listen for docking events and report to the encapsulating
-     *             docking pane.
+     *        docking pane.
      */
     public DockNodeEventHandler(Node node) {
       this.node = node;
@@ -394,7 +394,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * layout. This is used to relatively position the dock nodes to other nodes given their preferred
    * size.
    *
-   * @param node    The node that is to be docked into this dock pane.
+   * @param node The node that is to be docked into this dock pane.
    * @param dockPos The docking position of the node relative to the sibling.
    * @param sibling The sibling of this node in the layout.
    */
@@ -442,8 +442,9 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       }
     } else {
       // Otherwise, SplitPane is assumed.
-      Orientation requestedOrientation = (dockPos == DockPos.LEFT || dockPos == DockPos.RIGHT)
-                                         ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+      Orientation requestedOrientation =
+          (dockPos == DockPos.LEFT || dockPos == DockPos.RIGHT) ? Orientation.HORIZONTAL
+              : Orientation.VERTICAL;
 
       if (pane instanceof ContentSplitPane) {
         ContentSplitPane split = (ContentSplitPane) pane;
@@ -507,7 +508,6 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
           pane.setContentParent( split );
           sibling = ( Node ) pane;
           split.getItems().add( sibling );
-
           split.setOrientation( requestedOrientation );
           pane = split;
         }
@@ -527,7 +527,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * layout. This is used to relatively position the dock nodes to other nodes given their preferred
    * size.
    *
-   * @param node    The node that is to be docked into this dock pane.
+   * @param node The node that is to be docked into this dock pane.
    * @param dockPos The docking position of the node relative to the sibling.
    */
   void dock(Node node, DockPos dockPos) {
@@ -618,8 +618,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       dockAreaDrag = dockNodeDrag;
 
       for (DockPosButton dockIndicatorButton : dockPosButtons) {
-        if (dockIndicatorButton
-            .contains(dockIndicatorButton.screenToLocal(event.getScreenX(), event.getScreenY()))) {
+        if (dockIndicatorButton.contains(dockIndicatorButton.screenToLocal(event.getScreenX(),
+            event.getScreenY()))) {
           dockPosDrag = dockIndicatorButton.getDockPos();
           if (dockIndicatorButton.isDockRoot()) {
             dockAreaDrag = root;
@@ -666,10 +666,12 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
       if (dockNodeDrag != null) {
         Point2D originToScreen = dockNodeDrag.localToScreen(0, 0);
 
-        double posX = originToScreen.getX() + dockNodeDrag.getLayoutBounds().getWidth() / 2
-                      - dockPosIndicator.getWidth() / 2;
-        double posY = originToScreen.getY() + dockNodeDrag.getLayoutBounds().getHeight() / 2
-                      - dockPosIndicator.getHeight() / 2;
+        double posX =
+            originToScreen.getX() + dockNodeDrag.getLayoutBounds().getWidth() / 2
+                - dockPosIndicator.getWidth() / 2;
+        double posY =
+            originToScreen.getY() + dockNodeDrag.getLayoutBounds().getHeight() / 2
+                - dockPosIndicator.getHeight() / 2;
 
         if (!dockIndicatorPopup.isShowing()) {
           dockIndicatorPopup.show(DockPane.this, posX, posY);
