@@ -827,7 +827,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
     @Override
     protected void invalidated() {
 
-      if (getChildren() != null)
+      if (getChildren() != null && dockTitleBar != null)
       {
         if(get())
         {
