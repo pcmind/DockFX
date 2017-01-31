@@ -20,6 +20,7 @@
 
 package org.dockfx;
 
+import com.sun.javafx.css.StyleManager;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
@@ -31,16 +32,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-
-import com.sun.javafx.css.StyleManager;
-
-import javafx.stage.Stage;
-
-import org.dockfx.pane.ContentPane;
-import org.dockfx.pane.ContentSplitPane;
-import org.dockfx.pane.ContentTabPane;
-import org.dockfx.pane.DockNodeTab;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -59,7 +50,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.dockfx.pane.ContentPane;
+import org.dockfx.pane.ContentSplitPane;
+import org.dockfx.pane.ContentTabPane;
+import org.dockfx.pane.DockNodeTab;
 
 /**
  * Base class for a dock pane that provides the layout of the dock nodes. Stacking the dock nodes to
@@ -424,23 +420,48 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     if (dockPos == DockPos.CENTER) {
-      if (pane instanceof ContentSplitPane) {
-        // Create a ContentTabPane with two nodes
-        DockNode siblingNode = (DockNode) sibling;
-        DockNode newNode = (DockNode) node;
+        if (sibling instanceof DockNode) {
+                if (pane instanceof ContentSplitPane) {
+                    // Create a ContentTabPane with two nodes
+                    DockNode siblingNode = (DockNode) sibling;
+                    DockNode newNode = (DockNode) node;
 
-        ContentTabPane tabPane = new ContentTabPane();
+                    ContentTabPane tabPane = new ContentTabPane();
 
-        tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
-        tabPane.addDockNodeTab(new DockNodeTab(newNode));
+                    tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
+                    tabPane.addDockNodeTab(new DockNodeTab(newNode));
 
-        tabPane.setContentParent(pane);
+                    tabPane.setContentParent(pane);
 
-        double[] pos = ((ContentSplitPane) pane).getDividerPositions();
-        pane.set(sibling, tabPane);
-        ((ContentSplitPane) pane).setDividerPositions(pos);
-      }
-    } else {
+                    double[] pos = ((ContentSplitPane) pane).getDividerPositions();
+                    pane.set(sibling, tabPane);
+                    ((ContentSplitPane) pane).setDividerPositions(pos);
+                }
+            } else {
+                ContentSplitPane siblingSplitPane = (ContentSplitPane) sibling;
+
+                ContentPane parent = siblingSplitPane.getContentParent();
+                if (parent == null) {
+                    Node child = siblingSplitPane.getChildrenList().get(0);
+                    if (child instanceof DockNode) {
+                        // If we are docking into a DockNode, make a ContentTabPane of the two
+                        ContentTabPane tabPane = new ContentTabPane();
+                        tabPane.addNode(root, null, child, DockPos.CENTER);
+                        siblingSplitPane.set(child, tabPane);
+                        tabPane.setContentParent(siblingSplitPane);
+                        pane = tabPane;
+                        sibling = null;
+                    } else if (child instanceof ContentSplitPane) {
+                        // TODO: Recursively reorder the panes instead of throwing it in?
+                        pane = (ContentSplitPane) child;
+                        dockPos = DockPos.LEFT;
+                    } else if (child instanceof ContentTabPane) {
+                        // If we already have a tab pane, just add the node to it
+                        pane = (ContentTabPane) child;
+                    }
+                }
+            }
+      } else {
       // Otherwise, SplitPane is assumed.
       Orientation requestedOrientation = (dockPos == DockPos.LEFT || dockPos == DockPos.RIGHT)
                                          ? Orientation.HORIZONTAL : Orientation.VERTICAL;
