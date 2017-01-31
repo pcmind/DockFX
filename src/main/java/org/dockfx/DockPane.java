@@ -836,7 +836,13 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         contents =
         (HashMap<String, ContentHolder>) loadCollection(filePath);
 
-    applyPane(contents, (ContentPane) root, delayOpenHandler);
+    try
+    {
+      applyPane( contents, ( ContentPane ) root, delayOpenHandler );
+    } catch ( NullPointerException exp )
+    {
+
+    }
   }
 
   private void collectDockNodes(HashMap<String, DockNode> dockNodes, ContentPane pane) {
@@ -906,6 +912,24 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     ContentHolder rootHolder = contents.get("0");
     Node newRoot = buildPane(null, rootHolder, dockNodes, delayOpenHandler);
 
+    // We have new dock nodes to be added, otherwise we will lose the new nodes
+    if(dockNodes.size() > 0)
+    {
+      for(String title : dockNodes.keySet())
+      {
+        DockNode node = dockNodes.get(title);
+        node.setFloating(true, null, this);
+
+        node.getStage().setX(node.getStage().getX() + 100);
+        node.getStage().setY(node.getStage().getY() + 100);
+
+        node.getStage().setWidth(300);
+        node.getStage().setHeight(200);
+      }
+
+      dockNodes.clear();
+    }
+
     this.root = newRoot;
     this.getChildren().set(0, this.root);
   }
@@ -927,6 +951,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
             }
 
             splitPane.getItems().add(dockNodes.get(item));
+            dockNodes.remove(item);
           }
           else
           {
@@ -957,6 +982,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
           // Use dock node
           if(dockNodes.containsKey(item)) {
             tabPane.addDockNodeTab(new DockNodeTab(dockNodes.get(item)));
+            dockNodes.remove(item);
           }
           else
           {
