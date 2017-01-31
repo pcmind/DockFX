@@ -922,9 +922,6 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
         node.getStage().setX(node.getStage().getX() + 100);
         node.getStage().setY(node.getStage().getY() + 100);
-
-        node.getStage().setWidth(300);
-        node.getStage().setHeight(200);
       }
 
       dockNodes.clear();
