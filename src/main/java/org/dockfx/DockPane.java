@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -771,39 +773,13 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     contents.get("0").addProperty("Position", new Double[]{this.getScene().getWindow().getX(),
                                                            this.getScene().getWindow().getY()});
 
-    storeCollection(filePath, contents);
-  }
-
-  private Object loadCollection(String fileName) {
-    XMLDecoder e = null;
-    try {
-      e = new XMLDecoder(
-          new BufferedInputStream(
-              new FileInputStream(fileName)));
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
+    // Try to write layout to file.
+    try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(filePath)))) {
+        encoder.writeObject(contents);
     }
-
-    Object collection = e.readObject();
-
-    e.close();
-
-    return collection;
-  }
-
-  private void storeCollection(String fileName, Object collection) {
-    XMLEncoder e = null;
-    try {
-      e = new XMLEncoder(
-          new BufferedOutputStream(
-              new FileOutputStream(fileName)));
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
+    catch (FileNotFoundException e) {
+        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not save preferences to {0}", filePath);
     }
-
-    e.writeObject(collection);
-
-    e.close();
   }
 
   private ContentHolder checkPane(HashMap<String, ContentHolder> contents, ContentPane pane,
@@ -851,20 +827,29 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     loadPreference(filePath, null);
   }
 
-  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler)
-  {
-    HashMap<String, ContentHolder>
-        contents =
-        (HashMap<String, ContentHolder>) loadCollection(filePath);
+  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) {
+    HashMap<String, ContentHolder> contents = null;
 
-    try
-    {
-      applyPane( contents, ( ContentPane ) root, delayOpenHandler );
-    } catch ( NullPointerException exp )
-    {
-
+    try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath)))) {
+        contents = (HashMap<String, ContentHolder>) decoder.readObject();
     }
-  }
+    catch (NullPointerException e) {
+        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Null filepath, cannot load preferences", filePath);
+    }
+    catch (FileNotFoundException e) {
+        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "No preferences found at {0}", filePath);
+    }
+    catch (ArrayIndexOutOfBoundsException e) {
+        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not retrieve any preferences from {0}", filePath);
+    }
+    catch (ClassCastException e) {
+        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not load preferences in correct format from {0} ", filePath);
+    } 
+
+    if (contents != null) {
+        applyPane(contents, (ContentPane) root, delayOpenHandler);
+    }
+}
 
   private void collectDockNodes(HashMap<String, DockNode> dockNodes, ContentPane pane) {
     for (Node node : pane.getChildrenList()) {
