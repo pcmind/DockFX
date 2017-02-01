@@ -72,8 +72,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * The current root node of this dock pane's layout.
    */
   private Node root;
-  
-  /** 
+
+  /**
    * Whether or not this dock pane allows the docking of dock nodes from 
    * external sources (i.e., other dock panes).
    */
@@ -422,48 +422,48 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     if (dockPos == DockPos.CENTER) {
-        if (sibling instanceof DockNode) {
-                if (pane instanceof ContentSplitPane) {
-                    // Create a ContentTabPane with two nodes
-                    DockNode siblingNode = (DockNode) sibling;
-                    DockNode newNode = (DockNode) node;
+      if (sibling instanceof DockNode) {
+        if (pane instanceof ContentSplitPane) {
+          // Create a ContentTabPane with two nodes
+          DockNode siblingNode = (DockNode) sibling;
+          DockNode newNode = (DockNode) node;
 
-                    ContentTabPane tabPane = new ContentTabPane();
+          ContentTabPane tabPane = new ContentTabPane();
 
-                    tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
-                    tabPane.addDockNodeTab(new DockNodeTab(newNode));
+          tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
+          tabPane.addDockNodeTab(new DockNodeTab(newNode));
 
-                    tabPane.setContentParent(pane);
+          tabPane.setContentParent(pane);
 
-                    double[] pos = ((ContentSplitPane) pane).getDividerPositions();
-                    pane.set(sibling, tabPane);
-                    ((ContentSplitPane) pane).setDividerPositions(pos);
-                }
-            } else {
-                ContentSplitPane siblingSplitPane = (ContentSplitPane) sibling;
-
-                ContentPane parent = siblingSplitPane.getContentParent();
-                if (parent == null) {
-                    Node child = siblingSplitPane.getChildrenList().get(0);
-                    if (child instanceof DockNode) {
-                        // If we are docking into a DockNode, make a ContentTabPane of the two
-                        ContentTabPane tabPane = new ContentTabPane();
-                        tabPane.addNode(root, null, child, DockPos.CENTER);
-                        siblingSplitPane.set(child, tabPane);
-                        tabPane.setContentParent(siblingSplitPane);
-                        pane = tabPane;
-                        sibling = null;
-                    } else if (child instanceof ContentSplitPane) {
-                        // TODO: Recursively reorder the panes instead of throwing it in?
-                        pane = (ContentSplitPane) child;
-                        dockPos = DockPos.LEFT;
-                    } else if (child instanceof ContentTabPane) {
-                        // If we already have a tab pane, just add the node to it
-                        pane = (ContentTabPane) child;
-                    }
-                }
-            }
+          double[] pos = ((ContentSplitPane) pane).getDividerPositions();
+          pane.set(sibling, tabPane);
+          ((ContentSplitPane) pane).setDividerPositions(pos);
+        }
       } else {
+        ContentSplitPane siblingSplitPane = (ContentSplitPane) sibling;
+
+        ContentPane parent = siblingSplitPane.getContentParent();
+        if (parent == null) {
+          Node child = siblingSplitPane.getChildrenList().get(0);
+          if (child instanceof DockNode) {
+            // If we are docking into a DockNode, make a ContentTabPane of the two
+            ContentTabPane tabPane = new ContentTabPane();
+            tabPane.addNode(root, null, child, DockPos.CENTER);
+            siblingSplitPane.set(child, tabPane);
+            tabPane.setContentParent(siblingSplitPane);
+            pane = tabPane;
+            sibling = null;
+          } else if (child instanceof ContentSplitPane) {
+            // TODO: Recursively reorder the panes instead of throwing it in?
+            pane = (ContentSplitPane) child;
+            dockPos = DockPos.LEFT;
+          } else if (child instanceof ContentTabPane) {
+            // If we already have a tab pane, just add the node to it
+            pane = (ContentTabPane) child;
+          }
+        }
+      }
+    } else {
       // Otherwise, SplitPane is assumed.
       Orientation requestedOrientation = (dockPos == DockPos.LEFT || dockPos == DockPos.RIGHT)
                                          ? Orientation.HORIZONTAL : Orientation.VERTICAL;
@@ -493,45 +493,38 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
       } else if (pane instanceof ContentTabPane) {
 
-        if( pane.getContentParent() != null )
-        {
-          ContentSplitPane split = ( ContentSplitPane ) pane.getContentParent();
+        if (pane.getContentParent() != null) {
+          ContentSplitPane split = (ContentSplitPane) pane.getContentParent();
 
           // if the orientation is different then reparent the split pane
-          if ( split.getOrientation() != requestedOrientation )
-          {
+          if (split.getOrientation() != requestedOrientation) {
             ContentSplitPane splitPane = new ContentSplitPane();
-            if ( split == root && sibling == root )
-            {
-              this.getChildren().set( this.getChildren().indexOf( root ), splitPane );
-              splitPane.getItems().add( split );
+            if (split == root && sibling == root) {
+              this.getChildren().set(this.getChildren().indexOf(root), splitPane);
+              splitPane.getItems().add(split);
               root = splitPane;
-            }
-            else
-            {
-              pane.setContentParent( splitPane );
-              sibling = ( Node ) pane;
-              split.set( sibling, splitPane );
-              splitPane.setContentParent( split );
-              splitPane.getItems().add( sibling );
+            } else {
+              pane.setContentParent(splitPane);
+              sibling = (Node) pane;
+              split.set(sibling, splitPane);
+              splitPane.setContentParent(split);
+              splitPane.getItems().add(sibling);
             }
             split = splitPane;
-          }
-          else
-          {
-            sibling = ( Node ) pane;
+          } else {
+            sibling = (Node) pane;
           }
 
-          split.setOrientation( requestedOrientation );
+          split.setOrientation(requestedOrientation);
           pane = split;
         } else {
           ContentSplitPane split = new ContentSplitPane();
 
-          pane.setContentParent( split );
-          sibling = ( Node ) pane;
-          split.getItems().add( sibling );
+          pane.setContentParent(split);
+          sibling = (Node) pane;
+          split.getItems().add(sibling);
 
-          split.setOrientation( requestedOrientation );
+          split.setOrientation(requestedOrientation);
           pane = split;
         }
       }
@@ -620,7 +613,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         return;
       }
     }
-        
+
     if (event.getEventType() == DockEvent.DOCK_ENTER) {
       if (!dockIndicatorOverlay.isShowing()) {
         Point2D originToScreen;
@@ -630,7 +623,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         else {
             originToScreen = this.localToScreen(0, 0);
         }
-        
+
         dockIndicatorOverlay
             .show(DockPane.this, originToScreen.getX(), originToScreen.getY());
       }
@@ -774,11 +767,12 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
                                                            this.getScene().getWindow().getY()});
 
     // Try to write layout to file.
-    try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(filePath)))) {
-        encoder.writeObject(contents);
-    }
-    catch (FileNotFoundException e) {
-        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not save preferences to {0}", filePath);
+    try (XMLEncoder encoder = new XMLEncoder(
+        new BufferedOutputStream(new FileOutputStream(filePath)))) {
+      encoder.writeObject(contents);
+    } catch (FileNotFoundException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not save preferences to {0}", filePath);
     }
   }
 
@@ -830,26 +824,27 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
   public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) {
     HashMap<String, ContentHolder> contents = null;
 
-    try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath)))) {
-        contents = (HashMap<String, ContentHolder>) decoder.readObject();
+    try (XMLDecoder decoder = new XMLDecoder(
+        new BufferedInputStream(new FileInputStream(filePath)))) {
+      contents = (HashMap<String, ContentHolder>) decoder.readObject();
+    } catch (NullPointerException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Null filepath, cannot load preferences", filePath);
+    } catch (FileNotFoundException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "No preferences found at {0}", filePath);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not retrieve any preferences from {0}", filePath);
+    } catch (ClassCastException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not load preferences in correct format from {0} ", filePath);
     }
-    catch (NullPointerException e) {
-        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Null filepath, cannot load preferences", filePath);
-    }
-    catch (FileNotFoundException e) {
-        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "No preferences found at {0}", filePath);
-    }
-    catch (ArrayIndexOutOfBoundsException e) {
-        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not retrieve any preferences from {0}", filePath);
-    }
-    catch (ClassCastException e) {
-        Logger.getLogger(DockPane.class.getName()).log(Level.WARNING, "Could not load preferences in correct format from {0} ", filePath);
-    } 
 
     if (contents != null) {
-        applyPane(contents, (ContentPane) root, delayOpenHandler);
+      applyPane( contents, ( ContentPane ) root, delayOpenHandler );
     }
-}
+  }
 
   private void collectDockNodes(HashMap<String, DockNode> dockNodes, ContentPane pane) {
     for (Node node : pane.getChildrenList()) {
