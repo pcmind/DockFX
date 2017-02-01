@@ -20,6 +20,7 @@
 
 package org.dockfx;
 
+import com.sun.javafx.css.StyleManager;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
@@ -31,16 +32,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
-
-import com.sun.javafx.css.StyleManager;
-
-import javafx.stage.Stage;
-
-import org.dockfx.pane.ContentPane;
-import org.dockfx.pane.ContentSplitPane;
-import org.dockfx.pane.ContentTabPane;
-import org.dockfx.pane.DockNodeTab;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -59,7 +52,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.dockfx.pane.ContentPane;
+import org.dockfx.pane.ContentSplitPane;
+import org.dockfx.pane.ContentTabPane;
+import org.dockfx.pane.DockNodeTab;
 
 /**
  * Base class for a dock pane that provides the layout of the dock nodes. Stacking the dock nodes to
@@ -74,8 +72,8 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    * The current root node of this dock pane's layout.
    */
   private Node root;
-  
-  /** 
+
+  /**
    * Whether or not this dock pane allows the docking of dock nodes from 
    * external sources (i.e., other dock panes).
    */
@@ -424,21 +422,46 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     }
 
     if (dockPos == DockPos.CENTER) {
-      if (pane instanceof ContentSplitPane) {
-        // Create a ContentTabPane with two nodes
-        DockNode siblingNode = (DockNode) sibling;
-        DockNode newNode = (DockNode) node;
+      if (sibling instanceof DockNode) {
+        if (pane instanceof ContentSplitPane) {
+          // Create a ContentTabPane with two nodes
+          DockNode siblingNode = (DockNode) sibling;
+          DockNode newNode = (DockNode) node;
 
-        ContentTabPane tabPane = new ContentTabPane();
+          ContentTabPane tabPane = new ContentTabPane();
 
-        tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
-        tabPane.addDockNodeTab(new DockNodeTab(newNode));
+          tabPane.addDockNodeTab(new DockNodeTab(siblingNode));
+          tabPane.addDockNodeTab(new DockNodeTab(newNode));
 
-        tabPane.setContentParent(pane);
+          tabPane.setContentParent(pane);
 
-        double[] pos = ((ContentSplitPane) pane).getDividerPositions();
-        pane.set(sibling, tabPane);
-        ((ContentSplitPane) pane).setDividerPositions(pos);
+          double[] pos = ((ContentSplitPane) pane).getDividerPositions();
+          pane.set(sibling, tabPane);
+          ((ContentSplitPane) pane).setDividerPositions(pos);
+        }
+      } else {
+        ContentSplitPane siblingSplitPane = (ContentSplitPane) sibling;
+
+        ContentPane parent = siblingSplitPane.getContentParent();
+        if (parent == null) {
+          Node child = siblingSplitPane.getChildrenList().get(0);
+          if (child instanceof DockNode) {
+            // If we are docking into a DockNode, make a ContentTabPane of the two
+            ContentTabPane tabPane = new ContentTabPane();
+            tabPane.addNode(root, null, child, DockPos.CENTER);
+            siblingSplitPane.set(child, tabPane);
+            tabPane.setContentParent(siblingSplitPane);
+            pane = tabPane;
+            sibling = null;
+          } else if (child instanceof ContentSplitPane) {
+            // TODO: Recursively reorder the panes instead of throwing it in?
+            pane = (ContentSplitPane) child;
+            dockPos = DockPos.LEFT;
+          } else if (child instanceof ContentTabPane) {
+            // If we already have a tab pane, just add the node to it
+            pane = (ContentTabPane) child;
+          }
+        }
       }
     } else {
       // Otherwise, SplitPane is assumed.
@@ -470,45 +493,38 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         }
       } else if (pane instanceof ContentTabPane) {
 
-        if( pane.getContentParent() != null )
-        {
-          ContentSplitPane split = ( ContentSplitPane ) pane.getContentParent();
+        if (pane.getContentParent() != null) {
+          ContentSplitPane split = (ContentSplitPane) pane.getContentParent();
 
           // if the orientation is different then reparent the split pane
-          if ( split.getOrientation() != requestedOrientation )
-          {
+          if (split.getOrientation() != requestedOrientation) {
             ContentSplitPane splitPane = new ContentSplitPane();
-            if ( split == root && sibling == root )
-            {
-              this.getChildren().set( this.getChildren().indexOf( root ), splitPane );
-              splitPane.getItems().add( split );
+            if (split == root && sibling == root) {
+              this.getChildren().set(this.getChildren().indexOf(root), splitPane);
+              splitPane.getItems().add(split);
               root = splitPane;
-            }
-            else
-            {
-              pane.setContentParent( splitPane );
-              sibling = ( Node ) pane;
-              split.set( sibling, splitPane );
-              splitPane.setContentParent( split );
-              splitPane.getItems().add( sibling );
+            } else {
+              pane.setContentParent(splitPane);
+              sibling = (Node) pane;
+              split.set(sibling, splitPane);
+              splitPane.setContentParent(split);
+              splitPane.getItems().add(sibling);
             }
             split = splitPane;
-          }
-          else
-          {
-            sibling = ( Node ) pane;
+          } else {
+            sibling = (Node) pane;
           }
 
-          split.setOrientation( requestedOrientation );
+          split.setOrientation(requestedOrientation);
           pane = split;
         } else {
           ContentSplitPane split = new ContentSplitPane();
 
-          pane.setContentParent( split );
-          sibling = ( Node ) pane;
-          split.getItems().add( sibling );
+          pane.setContentParent(split);
+          sibling = (Node) pane;
+          split.getItems().add(sibling);
 
-          split.setOrientation( requestedOrientation );
+          split.setOrientation(requestedOrientation);
           pane = split;
         }
       }
@@ -597,7 +613,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         return;
       }
     }
-        
+
     if (event.getEventType() == DockEvent.DOCK_ENTER) {
       if (!dockIndicatorOverlay.isShowing()) {
         Point2D originToScreen;
@@ -607,7 +623,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         else {
             originToScreen = this.localToScreen(0, 0);
         }
-        
+
         dockIndicatorOverlay
             .show(DockPane.this, originToScreen.getX(), originToScreen.getY());
       }
@@ -750,39 +766,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     contents.get("0").addProperty("Position", new Double[]{this.getScene().getWindow().getX(),
                                                            this.getScene().getWindow().getY()});
 
-    storeCollection(filePath, contents);
-  }
-
-  private Object loadCollection(String fileName) {
-    XMLDecoder e = null;
-    try {
-      e = new XMLDecoder(
-          new BufferedInputStream(
-              new FileInputStream(fileName)));
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
+    // Try to write layout to file.
+    try (XMLEncoder encoder = new XMLEncoder(
+        new BufferedOutputStream(new FileOutputStream(filePath)))) {
+      encoder.writeObject(contents);
+    } catch (FileNotFoundException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not save preferences to {0}", filePath);
     }
-
-    Object collection = e.readObject();
-
-    e.close();
-
-    return collection;
-  }
-
-  private void storeCollection(String fileName, Object collection) {
-    XMLEncoder e = null;
-    try {
-      e = new XMLEncoder(
-          new BufferedOutputStream(
-              new FileOutputStream(fileName)));
-    } catch (FileNotFoundException e1) {
-      e1.printStackTrace();
-    }
-
-    e.writeObject(collection);
-
-    e.close();
   }
 
   private ContentHolder checkPane(HashMap<String, ContentHolder> contents, ContentPane pane,
@@ -830,18 +821,28 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     loadPreference(filePath, null);
   }
 
-  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler)
-  {
-    HashMap<String, ContentHolder>
-        contents =
-        (HashMap<String, ContentHolder>) loadCollection(filePath);
+  public void loadPreference(String filePath, DelayOpenHandler delayOpenHandler) {
+    HashMap<String, ContentHolder> contents = null;
 
-    try
-    {
+    try (XMLDecoder decoder = new XMLDecoder(
+        new BufferedInputStream(new FileInputStream(filePath)))) {
+      contents = (HashMap<String, ContentHolder>) decoder.readObject();
+    } catch (NullPointerException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Null filepath, cannot load preferences", filePath);
+    } catch (FileNotFoundException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "No preferences found at {0}", filePath);
+    } catch (ArrayIndexOutOfBoundsException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not retrieve any preferences from {0}", filePath);
+    } catch (ClassCastException e) {
+      Logger.getLogger(DockPane.class.getName())
+          .log(Level.WARNING, "Could not load preferences in correct format from {0} ", filePath);
+    }
+
+    if (contents != null) {
       applyPane( contents, ( ContentPane ) root, delayOpenHandler );
-    } catch ( NullPointerException exp )
-    {
-
     }
   }
 
