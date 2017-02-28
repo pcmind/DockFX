@@ -337,7 +337,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
    *
    * @return The URL of the default style sheet used by DockFX.
    */
-  public final static String getDefaultUserAgentStyleheet() {
+  public final static String getDefaultUserAgentStylesheet() {
     return DockPane.class.getResource("default.css").toExternalForm();
   }
 
