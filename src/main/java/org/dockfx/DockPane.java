@@ -679,7 +679,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
         dockAreaIndicator.setVisible(false);
       }
 
-      if (dockNodeDrag != null) {
+      if (dockNodeDrag != null && ((DockNode)dockNodeDrag).getDockTitleBar() != null) {
         Point2D originToScreen = dockNodeDrag.localToScreen(0, 0);
 
         double posX = originToScreen.getX() + dockNodeDrag.getLayoutBounds().getWidth() / 2
