@@ -268,12 +268,18 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
     this.contents = contents;
     this.viewController = controller;
 
-    dockTitleBar = new DockTitleBar(this);
+    if (title != null) {
+        dockTitleBar = new DockTitleBar(this);
+        getChildren().addAll(dockTitleBar, contents);
+    } else {
+        dockTitleBar = null;
+        getChildren().addAll(contents);
+    }
+
     if (viewController != null) {
       viewController.setDockTitleBar(dockTitleBar);
     }
 
-    getChildren().addAll(dockTitleBar, contents);
     VBox.setVgrow(contents, Priority.ALWAYS);
 
     this.getStyleClass().add("dock-node");
