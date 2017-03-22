@@ -873,6 +873,19 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
     Double[] windowPosition = (Double[]) contents.get("0").getProperties().get("Position");
 
     Stage currentStage = (Stage) this.getScene().getWindow();
+
+    // In case that the current screen size is smaller than the size stored in the preference file,
+    // The below logic prevents from the window hidden in outside the current screen
+    if( windowPosition[0] > currentStage.getWidth() )
+    {
+      windowPosition[0] = currentStage.getX();
+    }
+
+    if( windowPosition[1] > currentStage.getHeight() )
+    {
+      windowPosition[1] = currentStage.getY();
+    }
+
     currentStage.setX(windowPosition[0]);
     currentStage.setY(windowPosition[1]);
 
