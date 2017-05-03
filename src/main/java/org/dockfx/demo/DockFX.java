@@ -102,9 +102,8 @@ public class DockFX extends Application {
     DockNode tabsDock = new DockNode(tabs, "Tabs Dock", new ImageView(dockImage));
     tabsDock.setPrefSize(300, 100);
     tabsDock.dock(dockPane, DockPos.TOP);
-    DockNode tableDock = new DockNode(tableView);
-    // let's disable our table from being undocked
-    tableDock.setDockTitleBar(null);
+
+    DockNode tableDock = new DockNode(tableView, "Table");
     tableDock.setPrefSize(300, 100);
     tableDock.dock(dockPane, DockPos.BOTTOM);
 
