@@ -263,18 +263,16 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
    * title bar and stage.
    */
   private void initializeDockNode(Node contents, String title, Node graphic, DockFXViewController controller) {
+	  if ( null == title || title.isEmpty() )
+		  title = "New Dock";
+
     this.titleProperty.setValue(title);
     this.graphicProperty.setValue(graphic);
     this.contents = contents;
     this.viewController = controller;
 
-    if (title != null) {
-        dockTitleBar = new DockTitleBar(this);
-        getChildren().addAll(dockTitleBar, contents);
-    } else {
-        dockTitleBar = null;
-        getChildren().addAll(contents);
-    }
+	dockTitleBar = new DockTitleBar( this );
+	getChildren().addAll( dockTitleBar, contents );
 
     if (viewController != null) {
       viewController.setDockTitleBar(dockTitleBar);
