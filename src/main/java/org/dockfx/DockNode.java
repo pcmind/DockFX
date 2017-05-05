@@ -942,6 +942,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	this.closedProperty.set(true);
     if (isFloating()) {
       setFloating(false);
+      dockPane.removeFloatingNodeFromUndockNodes( this );
     } else if (isDocked()) {
       undock();
     }

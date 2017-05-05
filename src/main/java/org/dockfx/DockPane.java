@@ -597,6 +597,11 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 
   }
 
+  public void removeFloatingNodeFromUndockNodes( DockNode n )
+  {
+    undockedNodes.remove( n );
+  }
+
   @Override
   public void handle(DockEvent event) {
     // handle exclusive mode.
