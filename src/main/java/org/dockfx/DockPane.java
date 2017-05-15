@@ -1289,8 +1289,11 @@ public class DockPane extends StackPane
             if (null != delayOpenHandler)
             {
               DockNode newNode = delayOpenHandler.open((String) item);
-              newNode.dockedProperty().set(true);
-              tabPane.addDockNodeTab(new DockNodeTab(newNode));
+              if (newNode != null)
+              {
+                newNode.dockedProperty().set(true);
+                tabPane.addDockNodeTab(new DockNodeTab(newNode));
+              }
             }
             else
               System.err.println(item + " is not present.");
