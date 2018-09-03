@@ -33,14 +33,6 @@ import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.dockfx.pane.ContentPane;
-import org.dockfx.pane.ContentSplitPane;
-import org.dockfx.pane.ContentTabPane;
-import org.dockfx.pane.DockNodeTab;
-
-import com.sun.javafx.css.StyleManager;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -61,6 +53,13 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import com.sun.javafx.css.StyleManager;
+
+import org.dockfx.pane.ContentPane;
+import org.dockfx.pane.ContentSplitPane;
+import org.dockfx.pane.ContentTabPane;
+import org.dockfx.pane.DockNodeTab;
 
 /**
  * Base class for a dock pane that provides the layout of the dock nodes.

@@ -27,16 +27,19 @@ import org.dockfx.DockTitleBar;
  *
  * @since DockFX 0.1
  */
-abstract public class DockFXViewController {
+abstract public class DockFXViewController
+{
 
-    private DockTitleBar dockTitleBar;
+  private DockTitleBar dockTitleBar;
 
-    public void setDockTitleBar(DockTitleBar dockTitleBar) {
-        this.dockTitleBar = dockTitleBar;
-    }
+  public void setDockTitleBar(DockTitleBar dockTitleBar)
+  {
+    this.dockTitleBar = dockTitleBar;
+  }
 
-    public DockTitleBar getDockTitleBar() {
-        return dockTitleBar;
-    }
+  public DockTitleBar getDockTitleBar()
+  {
+    return dockTitleBar;
+  }
 
 }
