@@ -1045,7 +1045,7 @@ public class DockPane extends StackPane
 
     try (
         XMLDecoder decoder =
-                           new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath))))
+                           new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath)), Thread.currentThread().getContextClassLoader()))
     {
       contents =
                (HashMap<String, ContentHolder>) decoder.readObject();
