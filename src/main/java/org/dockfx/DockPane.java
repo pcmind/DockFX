@@ -27,6 +27,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1272,6 +1273,7 @@ public class DockPane extends StackPane
     {
       ContentTabPane tabPane = new ContentTabPane();
 
+      List<DockNode> dockNodeList = new ArrayList<>();
       for (Object item : holder.getChildren())
       {
         if (item instanceof String)
@@ -1290,8 +1292,7 @@ public class DockPane extends StackPane
               DockNode newNode = delayOpenHandler.open((String) item);
               if (newNode != null)
               {
-                newNode.dockedProperty().set(true);
-                tabPane.addDockNodeTab(new DockNodeTab(newNode));
+              	dockNodeList.add( newNode );
               }
             }
             else
@@ -1299,6 +1300,12 @@ public class DockPane extends StackPane
           }
         }
       }
+
+      for (DockNode n : dockNodeList)
+	  {
+		n.dockedProperty().set(true);
+		tabPane.addDockNodeTab(new DockNodeTab(n));
+	  }
 
       if (parent != null)
         tabPane.setContentParent(parent);
