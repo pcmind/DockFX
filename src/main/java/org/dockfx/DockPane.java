@@ -45,6 +45,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -52,6 +53,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Popup;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -1127,12 +1129,14 @@ public class DockPane extends StackPane
     // the preference file,
     // The below logic prevents from the window hidden in outside the current
     // screen
-    if (windowPosition[0] > currentStage.getWidth())
+	Rectangle2D screen = Screen.getPrimary().getBounds();
+
+    if (windowPosition[0] > screen.getMaxX())
     {
       windowPosition[0] = currentStage.getX();
     }
 
-    if (windowPosition[1] > currentStage.getHeight())
+    if (windowPosition[1] > screen.getMaxY())
     {
       windowPosition[1] = currentStage.getY();
     }
