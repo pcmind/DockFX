@@ -44,6 +44,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import com.sun.javafx.stage.StageHelper;
+import org.dockfx.util.StageUtils;
 
 /**
  * Base class for a dock node title bar that provides the mouse dragging
@@ -323,8 +324,7 @@ public class DockTitleBar extends HBox
     // RFE for public scene graph traversal API filed but closed:
     // https://bugs.openjdk.java.net/browse/JDK-8133331
 
-    ObservableList<Stage> stages =
-                                 FXCollections.unmodifiableObservableList(StageHelper.getStages());
+    ObservableList<Stage> stages = FXCollections.unmodifiableObservableList(StageUtils.getStages());
     // fire the dock over event for the active stages
     for (Stage targetStage : stages)
     {

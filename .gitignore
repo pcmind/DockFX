@@ -11,6 +11,8 @@ dockfxdemo.jar
 /bin
 target
 .gradle
+.idea
+*.iml
 /build/
 
 out

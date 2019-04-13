@@ -1,12 +1,15 @@
 
 package org.dockfx.pane.skin;
 
+import static com.sun.javafx.scene.control.Properties.IS_TOUCH_SUPPORTED;
 import static com.sun.javafx.scene.control.skin.resources.ControlResources.getString;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sun.javafx.scene.control.LambdaMultiplePropertyChangeListenerHandler;
 import javafx.animation.Animation;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -28,6 +31,7 @@ import javafx.css.PseudoClass;
 import javafx.css.Styleable;
 import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
+import javafx.css.converter.EnumConverter;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -62,10 +66,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
-import com.sun.javafx.css.converters.EnumConverter;
-import com.sun.javafx.scene.control.MultiplePropertyChangeListenerHandler;
 import com.sun.javafx.scene.control.behavior.TabPaneBehavior;
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import com.sun.javafx.scene.traversal.Direction;
 import com.sun.javafx.scene.traversal.TraversalEngine;
 import com.sun.javafx.util.Utils;
@@ -80,7 +81,7 @@ import org.dockfx.pane.DockNodeTab;
  * uses customized graphics
  */
 public class ContentTabPaneSkin extends
-                                BehaviorSkinBase<TabPane, TabPaneBehavior>
+                                SkinBase<TabPane>
 {
   private static enum TabAnimation
   {
@@ -189,10 +190,12 @@ public class ContentTabPaneSkin extends
   private Rectangle tabHeaderAreaClipRect;
   private Tab selectedTab;
   private boolean isSelectingTab;
+  private final TabPaneBehavior tabPaneBehavior;
 
   public ContentTabPaneSkin(TabPane tabPane)
   {
-    super(tabPane, new TabPaneBehavior(tabPane));
+    super(tabPane);
+    tabPaneBehavior = new TabPaneBehavior(tabPane);
 
     clipRect = new Rectangle(tabPane.getWidth(), tabPane.getHeight());
     getSkinnable().setClip(clipRect);
@@ -218,10 +221,10 @@ public class ContentTabPaneSkin extends
 
     registerChangeListener(tabPane.getSelectionModel()
                                   .selectedItemProperty(),
-                           "SELECTED_TAB");
-    registerChangeListener(tabPane.sideProperty(), "SIDE");
-    registerChangeListener(tabPane.widthProperty(), "WIDTH");
-    registerChangeListener(tabPane.heightProperty(), "HEIGHT");
+            e -> handleControlPropertyChanged("SELECTED_TAB"));
+    registerChangeListener(tabPane.sideProperty(), e -> handleControlPropertyChanged("SIDE"));
+    registerChangeListener(tabPane.widthProperty(), e -> handleControlPropertyChanged("WIDTH"));
+    registerChangeListener(tabPane.heightProperty(), e -> handleControlPropertyChanged("HEIGHT"));
 
     selectedTab =
                 getSkinnable().getSelectionModel().getSelectedItem();
@@ -261,10 +264,8 @@ public class ContentTabPaneSkin extends
     return null;
   }
 
-  @Override
   protected void handleControlPropertyChanged(String property)
   {
-    super.handleControlPropertyChanged(property);
     if ("SELECTED_TAB".equals(property))
     {
       isSelectingTab = true;
@@ -583,11 +584,11 @@ public class ContentTabPaneSkin extends
     if (IS_TOUCH_SUPPORTED)
     {
       getSkinnable().addEventHandler(SwipeEvent.SWIPE_LEFT, t -> {
-        getBehavior().selectNextTab();
+        tabPaneBehavior.selectNextTab();
       });
 
       getSkinnable().addEventHandler(SwipeEvent.SWIPE_RIGHT, t -> {
-        getBehavior().selectPreviousTab();
+        tabPaneBehavior.selectPreviousTab();
       });
     }
   }
@@ -1493,11 +1494,8 @@ public class ContentTabPaneSkin extends
 
     private boolean isClosing = false;
 
-    private MultiplePropertyChangeListenerHandler listener =
-                                                           new MultiplePropertyChangeListenerHandler(param -> {
-                                                             handlePropertyChanged(param);
-                                                             return null;
-                                                           });
+    private LambdaMultiplePropertyChangeListenerHandler listener =
+                                                           new LambdaMultiplePropertyChangeListenerHandler();
 
     private final ListChangeListener<String> styleClassListener =
                                                                 new ListChangeListener<String>()
@@ -1549,10 +1547,9 @@ public class ContentTabPaneSkin extends
           case FIRE:
           {
             Tab tab = getTab();
-            TabPaneBehavior behavior = getBehavior();
-            if (behavior.canCloseTab(tab))
+            if (tabPaneBehavior.canCloseTab(tab))
             {
-              behavior.closeTab(tab);
+              tabPaneBehavior.closeTab(tab);
               setOnMousePressed(null);
             }
           }
@@ -1569,11 +1566,9 @@ public class ContentTabPaneSkin extends
         @Override
         public void handle(MouseEvent me)
         {
-          Tab tab = getTab();
-          TabPaneBehavior behavior = getBehavior();
-          if (behavior.canCloseTab(tab))
+          if (tabPaneBehavior.canCloseTab(tab))
           {
-            behavior.closeTab(tab);
+            tabPaneBehavior.closeTab(tab);
             setOnMousePressed(null);
           }
         }
@@ -1722,36 +1717,36 @@ public class ContentTabPaneSkin extends
       }
 
       listener.registerChangeListener(tab.closableProperty(),
-                                      "CLOSABLE");
+              e ->handlePropertyChanged("CLOSABLE"));
       listener.registerChangeListener(tab.selectedProperty(),
-                                      "SELECTED");
-      listener.registerChangeListener(tab.textProperty(), "TEXT");
+              e ->handlePropertyChanged("SELECTED"));
+      listener.registerChangeListener(tab.textProperty(), e ->handlePropertyChanged("TEXT"));
       listener.registerChangeListener(tab.graphicProperty(),
-                                      "GRAPHIC");
+              e ->handlePropertyChanged("GRAPHIC"));
       listener.registerChangeListener(tab.contextMenuProperty(),
-                                      "CONTEXT_MENU");
+              e ->handlePropertyChanged("CONTEXT_MENU"));
       listener.registerChangeListener(tab.tooltipProperty(),
-                                      "TOOLTIP");
+              e ->handlePropertyChanged("TOOLTIP"));
       listener.registerChangeListener(tab.disableProperty(),
-                                      "DISABLE");
-      listener.registerChangeListener(tab.styleProperty(), "STYLE");
+              e ->handlePropertyChanged("DISABLE"));
+      listener.registerChangeListener(tab.styleProperty(), e ->handlePropertyChanged("STYLE"));
 
       tab.getStyleClass().addListener(weakStyleClassListener);
 
       listener.registerChangeListener(getSkinnable().tabClosingPolicyProperty(),
-                                      "TAB_CLOSING_POLICY");
+                                      e -> handlePropertyChanged("TAB_CLOSING_POLICY"));
       listener.registerChangeListener(getSkinnable().sideProperty(),
-                                      "SIDE");
+                                      e -> handlePropertyChanged("SIDE"));
       listener.registerChangeListener(getSkinnable().rotateGraphicProperty(),
-                                      "ROTATE_GRAPHIC");
+                                      e -> handlePropertyChanged("ROTATE_GRAPHIC"));
       listener.registerChangeListener(getSkinnable().tabMinWidthProperty(),
-                                      "TAB_MIN_WIDTH");
+                                      e -> handlePropertyChanged("TAB_MIN_WIDTH"));
       listener.registerChangeListener(getSkinnable().tabMaxWidthProperty(),
-                                      "TAB_MAX_WIDTH");
+              e -> handlePropertyChanged("TAB_MAX_WIDTH"));
       listener.registerChangeListener(getSkinnable().tabMinHeightProperty(),
-                                      "TAB_MIN_HEIGHT");
+              e -> handlePropertyChanged("TAB_MIN_HEIGHT"));
       listener.registerChangeListener(getSkinnable().tabMaxHeightProperty(),
-                                      "TAB_MAX_HEIGHT");
+              e -> handlePropertyChanged("TAB_MAX_HEIGHT"));
 
       getProperties().put(Tab.class, tab);
       getProperties().put(ContextMenu.class, tab.getContextMenu());
@@ -1778,17 +1773,16 @@ public class ContentTabPaneSkin extends
             if (showCloseButton())
             {
               Tab tab = getTab();
-              TabPaneBehavior behavior = getBehavior();
-              if (behavior.canCloseTab(tab))
+              if (tabPaneBehavior.canCloseTab(tab))
               {
                 removeListeners(tab);
-                behavior.closeTab(tab);
+                tabPaneBehavior.closeTab(tab);
               }
             }
           }
           else if (me.getButton().equals(MouseButton.PRIMARY))
           {
-            getBehavior().selectTab(getTab());
+            tabPaneBehavior.selectTab(getTab());
           }
         }
       });

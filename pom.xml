@@ -6,7 +6,7 @@
     <groupId>org.dockfx</groupId>
     <artifactId>DockFX</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.12</version>
+    <version>0.1.12_ClearControl</version>
     <name>DockFX</name>
     <url>https://github.com/ClearControl/DockFX.git</url>
 
@@ -17,6 +17,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <fileExtensions>java, properties, xml</fileExtensions>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>13-ea+5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>13-ea+5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>13-ea+5</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
