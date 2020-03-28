@@ -52,8 +52,8 @@ sourceSets
 }
 
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 
 test
@@ -70,8 +70,9 @@ test
 
 dependencies
 {
-
-
+	implementation 'org.openjfx:javafx-controls:13.0.2'
+	implementation 'org.openjfx:javafx-fxml:13.0.2'
+	implementation 'org.openjfx:javafx-web:13.0.2'
 }
 
 repositories
