@@ -83,9 +83,10 @@ public class DockFX extends Application
 
     // empty tabs ensure that dock node has its own background color when
     // floating
-    tabs.getTabs().addAll(new Tab("Tab 1", htmlEditor),
-                          new Tab("Tab 2"),
-                          new Tab("Tab 3"));
+    tabs.getTabs()
+        .addAll(new Tab("Tab 1", htmlEditor),
+                new Tab("Tab 2"),
+                new Tab("Tab 3"));
 
     TableView<String> tableView = new TableView<String>();
     // this is why @SupressWarnings is used above

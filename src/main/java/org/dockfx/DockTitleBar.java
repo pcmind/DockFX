@@ -43,7 +43,6 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
-import com.sun.javafx.stage.StageHelper;
 import org.dockfx.util.StageUtils;
 
 /**
@@ -52,8 +51,8 @@ import org.dockfx.util.StageUtils;
  * 
  * @since DockFX 0.1
  */
-public class DockTitleBar extends HBox
-                          implements EventHandler<MouseEvent>
+public class DockTitleBar extends HBox implements
+                          EventHandler<MouseEvent>
 {
 
   /**
@@ -223,8 +222,8 @@ public class DockTitleBar extends HBox
   /**
    * The button used for minimizing this title bar and its associated dock node.
    *
-   * @return The button used for minimizing this title bar and its associated
-   *         dock node.
+   * @return The button used for minimizing this title bar and its associated dock
+   *         node.
    */
   public final Button getMinimizeButton()
   {
@@ -261,8 +260,8 @@ public class DockTitleBar extends HBox
 
   /**
    * The task that is to be executed when the dock event target is picked. This
-   * provides context for what specific events and what order the events should
-   * be fired.
+   * provides context for what specific events and what order the events should be
+   * fired.
    * 
    * @since DockFX 0.1
    */
@@ -305,9 +304,9 @@ public class DockTitleBar extends HBox
   /**
    * Traverse the scene graph for all open stages and pick an event target for a
    * dock event based on the location. Once the event target is chosen run the
-   * event task with the target and the previous target of the last dock event
-   * if one is cached. If an event target is not found fire the explicit dock
-   * event on the stage root if one is provided.
+   * event task with the target and the previous target of the last dock event if
+   * one is cached. If an event target is not found fire the explicit dock event
+   * on the stage root if one is provided.
    * 
    * @param location
    *          The location of the dock event in screen coordinates.
@@ -324,7 +323,8 @@ public class DockTitleBar extends HBox
     // RFE for public scene graph traversal API filed but closed:
     // https://bugs.openjdk.java.net/browse/JDK-8133331
 
-    ObservableList<Stage> stages = FXCollections.unmodifiableObservableList(StageUtils.getStages());
+    ObservableList<Stage> stages =
+                                 FXCollections.unmodifiableObservableList(StageUtils.getStages());
     // fire the dock over event for the active stages
     for (Stage targetStage : stages)
     {
@@ -512,15 +512,16 @@ public class DockTitleBar extends HBox
                  - insetsDelta.getTop());
 
       // TODO: change the pick result by adding a copyForPick()
-      DockEvent dockEnterEvent = new DockEvent(this,
-                                               DockEvent.NULL_SOURCE_TARGET,
-                                               DockEvent.DOCK_ENTER,
-                                               event.getX(),
-                                               event.getY(),
-                                               event.getScreenX(),
-                                               event.getScreenY(),
-                                               null,
-                                               this.getDockNode());
+      DockEvent dockEnterEvent =
+                               new DockEvent(this,
+                                             DockEvent.NULL_SOURCE_TARGET,
+                                             DockEvent.DOCK_ENTER,
+                                             event.getX(),
+                                             event.getY(),
+                                             event.getScreenX(),
+                                             event.getScreenY(),
+                                             null,
+                                             this.getDockNode());
       DockEvent dockOverEvent =
                               new DockEvent(this,
                                             DockEvent.NULL_SOURCE_TARGET,
@@ -584,15 +585,16 @@ public class DockTitleBar extends HBox
     {
       dragging = false;
 
-      DockEvent dockReleasedEvent = new DockEvent(this,
-                                                  DockEvent.NULL_SOURCE_TARGET,
-                                                  DockEvent.DOCK_RELEASED,
-                                                  event.getX(),
-                                                  event.getY(),
-                                                  event.getScreenX(),
-                                                  event.getScreenY(),
-                                                  null,
-                                                  this.getDockNode());
+      DockEvent dockReleasedEvent =
+                                  new DockEvent(this,
+                                                DockEvent.NULL_SOURCE_TARGET,
+                                                DockEvent.DOCK_RELEASED,
+                                                event.getX(),
+                                                event.getY(),
+                                                event.getScreenX(),
+                                                event.getScreenY(),
+                                                null,
+                                                this.getDockNode());
 
       EventTask eventTask = new EventTask()
       {

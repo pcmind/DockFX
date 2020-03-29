@@ -107,8 +107,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
   private static final PseudoClass FLOATING_PSEUDO_CLASS =
                                                          PseudoClass.getPseudoClass("floating");
   /**
-   * CSS pseudo class selector representing whether this node is currently
-   * docked.
+   * CSS pseudo class selector representing whether this node is currently docked.
    */
   private static final PseudoClass DOCKED_PSEUDO_CLASS =
                                                        PseudoClass.getPseudoClass("docked");
@@ -212,8 +211,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
    *          The caption title of this dock node which maintains bidirectional
    *          state with the title bar and stage.
    * @param graphic
-   *          The caption graphic of this dock node which maintains
-   *          bidirectional state with the title bar and stage.
+   *          The caption graphic of this dock node which maintains bidirectional
+   *          state with the title bar and stage.
    */
   public DockNode(Node contents, String title, Node graphic)
   {
@@ -379,8 +378,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
    */
   public void setContents(Node contents)
   {
-    this.getChildren().set(this.getChildren().indexOf(this.contents),
-                           contents);
+    this.getChildren()
+        .set(this.getChildren().indexOf(this.contents), contents);
     this.contents = contents;
   }
 
@@ -389,8 +388,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
    * remove the dock title bar from the dock node by passing null.
    * 
    * @param dockTitleBar
-   *          null The new title bar of this dock node, can be set null
-   *          indicating no title bar is used.
+   *          null The new title bar of this dock node, can be set null indicating
+   *          no title bar is used.
    */
   public void setDockTitleBar(DockTitleBar dockTitleBar)
   {
@@ -981,8 +980,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
 
   /**
    * Boolean property maintaining whether this node is currently docked. This is
-   * used by the dock pane to inform the dock node whether it is currently
-   * docked.
+   * used by the dock pane to inform the dock node whether it is currently docked.
    * 
    * @defaultValue false
    */
@@ -1126,9 +1124,11 @@ public class DockNode extends VBox implements EventHandler<MouseEvent>
 
   private DockPane prevDockPane;
 
-  public DockPane getPrevDockPane() {
-  	return prevDockPane;
+  public DockPane getPrevDockPane()
+  {
+    return prevDockPane;
   }
+
   /**
    * Dock this node into a dock pane.
    * 

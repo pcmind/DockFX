@@ -96,8 +96,8 @@ public class DockEvent extends Event
                                                                                   "DOCK_RELEASED");
 
   /**
-   * Horizontal x position of the event relative to the origin of the
-   * DockEvent's node.
+   * Horizontal x position of the event relative to the origin of the DockEvent's
+   * node.
    */
   private transient double x;
 
@@ -132,17 +132,15 @@ public class DockEvent extends Event
   }
 
   /**
-   * Depth z position of the event relative to the origin of the DockEvent's
-   * node.
+   * Depth z position of the event relative to the origin of the DockEvent's node.
    */
   private transient double z;
 
   /**
-   * Depth position of the event relative to the origin of the DockEvent's
-   * source.
+   * Depth position of the event relative to the origin of the DockEvent's source.
    *
-   * @return depth position of the event relative to the origin of the
-   *         DockEvent's source.
+   * @return depth position of the event relative to the origin of the DockEvent's
+   *         source.
    */
   public final double getZ()
   {
@@ -204,10 +202,10 @@ public class DockEvent extends Event
   }
 
   /**
-   * Vertical y position of the event relative to the origin of the
-   * {@code Scene} that contains the DockEvent's node. If the node is not in a
-   * {@code Scene}, then the value is relative to the boundsInParent of the
-   * root-most parent of the DockEvent's node.
+   * Vertical y position of the event relative to the origin of the {@code Scene}
+   * that contains the DockEvent's node. If the node is not in a {@code Scene},
+   * then the value is relative to the boundsInParent of the root-most parent of
+   * the DockEvent's node.
    */
   private final double sceneY;
 
@@ -265,18 +263,18 @@ public class DockEvent extends Event
    * @param eventType
    *          The type of the event.
    * @param x
-   *          The x with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The x with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param y
-   *          The y with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The y with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param screenX
    *          The x coordinate relative to screen.
    * @param screenY
    *          The y coordinate relative to screen.
    * @param pickResult
-   *          pick result. Can be null, in this case a 2D pick result without
-   *          any further values is constructed based on the scene coordinates
+   *          pick result. Can be null, in this case a 2D pick result without any
+   *          further values is constructed based on the scene coordinates
    */
   public DockEvent(EventType<? extends DockEvent> eventType,
                    double x,
@@ -298,18 +296,18 @@ public class DockEvent extends Event
    * @param eventType
    *          The type of the event.
    * @param x
-   *          The x with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The x with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param y
-   *          The y with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The y with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param screenX
    *          The x coordinate relative to screen.
    * @param screenY
    *          The y coordinate relative to screen.
    * @param pickResult
-   *          pick result. Can be null, in this case a 2D pick result without
-   *          any further values is constructed based on the scene coordinates
+   *          pick result. Can be null, in this case a 2D pick result without any
+   *          further values is constructed based on the scene coordinates
    */
   public DockEvent(Object source,
                    EventTarget target,
@@ -341,18 +339,18 @@ public class DockEvent extends Event
    * @param eventType
    *          The type of the event.
    * @param x
-   *          The x with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The x with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param y
-   *          The y with respect to the source. Should be in scene coordinates
-   *          if source == null or source is not a Node.
+   *          The y with respect to the source. Should be in scene coordinates if
+   *          source == null or source is not a Node.
    * @param screenX
    *          The x coordinate relative to screen.
    * @param screenY
    *          The y coordinate relative to screen.
    * @param pickResult
-   *          pick result. Can be null, in this case a 2D pick result without
-   *          any further values is constructed based on the scene coordinates
+   *          pick result. Can be null, in this case a 2D pick result without any
+   *          further values is constructed based on the scene coordinates
    * @param contents
    *          The contents being dragged during this event.
    */

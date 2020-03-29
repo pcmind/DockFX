@@ -72,8 +72,8 @@ import org.dockfx.pane.DockNodeTab;
  *
  * @since DockFX 0.1
  */
-public class DockPane extends StackPane
-                      implements EventHandler<DockEvent>
+public class DockPane extends StackPane implements
+                      EventHandler<DockEvent>
 {
 
   /**
@@ -82,14 +82,14 @@ public class DockPane extends StackPane
   private Node root;
 
   /**
-   * Whether or not this dock pane allows the docking of dock nodes from
-   * external sources (i.e., other dock panes).
+   * Whether or not this dock pane allows the docking of dock nodes from external
+   * sources (i.e., other dock panes).
    */
   private boolean exclusive = false;
 
   /**
-   * Whether a DOCK_ENTER event has been received by this dock pane since the
-   * last DOCK_EXIT event was received.
+   * Whether a DOCK_ENTER event has been received by this dock pane since the last
+   * DOCK_EXIT event was received.
    */
   private boolean receivedEnter = false;
 
@@ -103,14 +103,13 @@ public class DockPane extends StackPane
    */
   private Node dockAreaDrag;
   /**
-   * The docking position of the current dock indicator button if any is
-   * selected.
+   * The docking position of the current dock indicator button if any is selected.
    */
   private DockPos dockPosDrag;
 
   /**
-   * The docking area shape with a dotted animated border on the indicator
-   * overlay popup.
+   * The docking area shape with a dotted animated border on the indicator overlay
+   * popup.
    */
   private Rectangle dockAreaIndicator;
   /**
@@ -132,15 +131,14 @@ public class DockPane extends StackPane
    */
   private GridPane dockPosIndicator;
   /**
-   * The popup used to display the local dock indicator buttons. This allows
-   * these indicator buttons to be displayed outside the window of this dock
-   * pane.
+   * The popup used to display the local dock indicator buttons. This allows these
+   * indicator buttons to be displayed outside the window of this dock pane.
    */
   private Popup dockIndicatorPopup;
 
   /**
-   * Base class for a dock indicator button that allows it to be displayed
-   * during a dock event and continue to receive input.
+   * Base class for a dock indicator button that allows it to be displayed during
+   * a dock event and continue to receive input.
    *
    * @since DockFX 0.1
    */
@@ -148,8 +146,8 @@ public class DockPane extends StackPane
   {
 
     /**
-     * Whether this dock indicator button is used for docking a node relative to
-     * the root of the dock pane.
+     * Whether this dock indicator button is used for docking a node relative to the
+     * root of the dock pane.
      */
     private boolean dockRoot = true;
     /**
@@ -168,12 +166,12 @@ public class DockPane extends StackPane
     }
 
     /**
-     * Whether this dock indicator button is used for docking a node relative to
-     * the root of the dock pane.
+     * Whether this dock indicator button is used for docking a node relative to the
+     * root of the dock pane.
      *
      * @param dockRoot
-     *          Whether this indicator button is used for docking a node
-     *          relative to the root of the dock pane.
+     *          Whether this indicator button is used for docking a node relative to
+     *          the root of the dock pane.
      */
     public final void setDockRoot(boolean dockRoot)
     {
@@ -202,11 +200,11 @@ public class DockPane extends StackPane
     }
 
     /**
-     * Whether this dock indicator button is used for docking a node relative to
-     * the root of the dock pane.
+     * Whether this dock indicator button is used for docking a node relative to the
+     * root of the dock pane.
      *
-     * @return Whether this indicator button is used for docking a node relative
-     *         to the root of the dock pane.
+     * @return Whether this indicator button is used for docking a node relative to
+     *         the root of the dock pane.
      */
     public final boolean isDockRoot()
     {
@@ -215,16 +213,16 @@ public class DockPane extends StackPane
   }
 
   /**
-   * A collection used to manage the indicator buttons and automate hit
-   * detection during DOCK_OVER events.
+   * A collection used to manage the indicator buttons and automate hit detection
+   * during DOCK_OVER events.
    */
   private ObservableList<DockPosButton> dockPosButtons;
 
   private ObservableList<DockNode> undockedNodes;
 
   /**
-   * Creates a new DockPane adding event handlers for dock events and creating
-   * the indicator overlays.
+   * Creates a new DockPane adding event handlers for dock events and creating the
+   * indicator overlays.
    */
   public DockPane()
   {
@@ -328,11 +326,12 @@ public class DockPane extends StackPane
     dockPosIndicator.add(dockLeft, 0, 1);
     dockPosIndicator.add(dockCenter, 1, 1);
 
-    dockRootPane.getChildren().addAll(dockAreaIndicator,
-                                      dockTopRoot,
-                                      dockRightRoot,
-                                      dockBottomRoot,
-                                      dockLeftRoot);
+    dockRootPane.getChildren()
+                .addAll(dockAreaIndicator,
+                        dockTopRoot,
+                        dockRightRoot,
+                        dockBottomRoot,
+                        dockLeftRoot);
 
     dockIndicatorOverlay.getContent().add(dockRootPane);
     dockIndicatorPopup.getContent().addAll(dockPosIndicator);
@@ -346,8 +345,8 @@ public class DockPane extends StackPane
   }
 
   /**
-   * Indicates whether or not the dock pane is in exclusive mode (the default).
-   * In exclusive mode, the dock pane ignores dock nodes dragged from other dock
+   * Indicates whether or not the dock pane is in exclusive mode (the default). In
+   * exclusive mode, the dock pane ignores dock nodes dragged from other dock
    * panes, and dock nodes dragged from this dock pane are ignored by other dock
    * panes.
    * 
@@ -370,8 +369,8 @@ public class DockPane extends StackPane
   }
 
   /**
-   * The Timeline used to animate the docking area indicator in the dock
-   * indicator overlay for this dock pane.
+   * The Timeline used to animate the docking area indicator in the dock indicator
+   * overlay for this dock pane.
    *
    * @return The Timeline used to animate the docking area indicator in the dock
    *         indicator overlay for this dock pane.
@@ -404,8 +403,8 @@ public class DockPane extends StackPane
   }
 
   /**
-   * A cache of all dock node event handlers that we have created for tracking
-   * the current docking area.
+   * A cache of all dock node event handlers that we have created for tracking the
+   * current docking area.
    */
   private ObservableMap<Node, DockNodeEventHandler> dockNodeEventFilters =
                                                                          FXCollections.observableHashMap();
@@ -423,14 +422,14 @@ public class DockPane extends StackPane
   {
 
     /**
-     * The node associated with this event handler that reports to the
-     * encapsulating dock pane.
+     * The node associated with this event handler that reports to the encapsulating
+     * dock pane.
      */
     private Node node = null;
 
     /**
-     * Creates a default dock node event handler that will help this dock pane
-     * track the current docking area.
+     * Creates a default dock node event handler that will help this dock pane track
+     * the current docking area.
      *
      * @param node
      *          The node that is to listen for docking events and report to the
@@ -450,8 +449,8 @@ public class DockPane extends StackPane
 
   /**
    * Dock the node into this dock pane at the given docking position relative to
-   * the sibling in the layout. This is used to relatively position the dock
-   * nodes to other nodes given their preferred size.
+   * the sibling in the layout. This is used to relatively position the dock nodes
+   * to other nodes given their preferred size.
    *
    * @param node
    *          The node that is to be docked into this dock pane.
@@ -568,8 +567,8 @@ public class DockPane extends StackPane
 
             if (split == root && sibling == root)
             {
-              this.getChildren().set(this.getChildren().indexOf(root),
-                                     splitPane);
+              this.getChildren()
+                  .set(this.getChildren().indexOf(root), splitPane);
               splitPane.getItems().add(split);
               root = splitPane;
             }
@@ -600,8 +599,8 @@ public class DockPane extends StackPane
             ContentSplitPane splitPane = new ContentSplitPane();
             if (split == root && sibling == root)
             {
-              this.getChildren().set(this.getChildren().indexOf(root),
-                                     splitPane);
+              this.getChildren()
+                  .set(this.getChildren().indexOf(root), splitPane);
               splitPane.getItems().add(split);
               root = splitPane;
             }
@@ -648,8 +647,8 @@ public class DockPane extends StackPane
 
   /**
    * Dock the node into this dock pane at the given docking position relative to
-   * the root in the layout. This is used to relatively position the dock nodes
-   * to other nodes given their preferred size.
+   * the root in the layout. This is used to relatively position the dock nodes to
+   * other nodes given their preferred size.
    *
    * @param node
    *          The node that is to be docked into this dock pane.
@@ -935,13 +934,14 @@ public class DockPane extends StackPane
       floatingNode.addProperty("Minimized",
                                floatingNodes.get(i).isMinimized());
 
-      Point2D loc = floatingNodes.get(i)
-                                 .localToScreen(floatingNodes.get(i)
-                                                             .getLayoutBounds()
-                                                             .getMinX(),
-                                                floatingNodes.get(i)
-                                                             .getLayoutBounds()
-                                                             .getMinY());
+      Point2D loc =
+                  floatingNodes.get(i)
+                               .localToScreen(floatingNodes.get(i)
+                                                           .getLayoutBounds()
+                                                           .getMinX(),
+                                              floatingNodes.get(i)
+                                                           .getLayoutBounds()
+                                                           .getMinY());
 
       floatingNode.addProperty("Position", new Double[]
       { loc.getX(), loc.getY() });
@@ -972,9 +972,10 @@ public class DockPane extends StackPane
     }
     catch (FileNotFoundException e)
     {
-      Logger.getLogger(DockPane.class.getName()).log(Level.WARNING,
-                                                     "Could not save preferences to {0}",
-                                                     filePath);
+      Logger.getLogger(DockPane.class.getName())
+            .log(Level.WARNING,
+                 "Could not save preferences to {0}",
+                 filePath);
     }
   }
 
@@ -1048,34 +1049,40 @@ public class DockPane extends StackPane
 
     try (
         XMLDecoder decoder =
-                           new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath)), Thread.currentThread().getContextClassLoader()))
+                           new XMLDecoder(new BufferedInputStream(new FileInputStream(filePath)),
+                                          Thread.currentThread()
+                                                .getContextClassLoader()))
     {
       contents =
                (HashMap<String, ContentHolder>) decoder.readObject();
     }
     catch (NullPointerException e)
     {
-      Logger.getLogger(DockPane.class.getName()).log(Level.WARNING,
-                                                     "Null filepath, cannot load preferences",
-                                                     filePath);
+      Logger.getLogger(DockPane.class.getName())
+            .log(Level.WARNING,
+                 "Null filepath, cannot load preferences",
+                 filePath);
     }
     catch (FileNotFoundException e)
     {
-      Logger.getLogger(DockPane.class.getName()).log(Level.WARNING,
-                                                     "No preferences found at {0}",
-                                                     filePath);
+      Logger.getLogger(DockPane.class.getName())
+            .log(Level.WARNING,
+                 "No preferences found at {0}",
+                 filePath);
     }
     catch (ArrayIndexOutOfBoundsException e)
     {
-      Logger.getLogger(DockPane.class.getName()).log(Level.WARNING,
-                                                     "Could not retrieve any preferences from {0}",
-                                                     filePath);
+      Logger.getLogger(DockPane.class.getName())
+            .log(Level.WARNING,
+                 "Could not retrieve any preferences from {0}",
+                 filePath);
     }
     catch (ClassCastException e)
     {
-      Logger.getLogger(DockPane.class.getName()).log(Level.WARNING,
-                                                     "Could not load preferences in correct format from {0} ",
-                                                     filePath);
+      Logger.getLogger(DockPane.class.getName())
+            .log(Level.WARNING,
+                 "Could not load preferences in correct format from {0} ",
+                 filePath);
     }
 
     if (contents != null)
@@ -1129,14 +1136,16 @@ public class DockPane extends StackPane
     // the preference file,
     // The below logic prevents from the window hidden in outside the current
     // screen
-	Rectangle2D screen = Screen.getPrimary().getBounds();
+    Rectangle2D screen = Screen.getPrimary().getBounds();
 
-    if (windowPosition[0] > screen.getMaxX() || windowPosition[0] < screen.getMinX())
+    if (windowPosition[0] > screen.getMaxX()
+        || windowPosition[0] < screen.getMinX())
     {
       windowPosition[0] = currentStage.getX();
     }
 
-    if (windowPosition[1] > screen.getMaxY() || windowPosition[1] < screen.getMinY())
+    if (windowPosition[1] > screen.getMaxY()
+        || windowPosition[1] < screen.getMinY())
     {
       windowPosition[1] = currentStage.getY();
     }
@@ -1296,7 +1305,7 @@ public class DockPane extends StackPane
               DockNode newNode = delayOpenHandler.open((String) item);
               if (newNode != null)
               {
-              	dockNodeList.add( newNode );
+                dockNodeList.add(newNode);
               }
             }
             else
@@ -1306,10 +1315,10 @@ public class DockPane extends StackPane
       }
 
       for (DockNode n : dockNodeList)
-	  {
-		n.dockedProperty().set(true);
-		tabPane.addDockNodeTab(new DockNodeTab(n));
-	  }
+      {
+        n.dockedProperty().set(true);
+        tabPane.addDockNodeTab(new DockNodeTab(n));
+      }
 
       if (parent != null)
         tabPane.setContentParent(parent);
