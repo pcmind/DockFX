@@ -6,9 +6,9 @@ project.ext.codeformatfile = (new File(projectDir,'/gradle/codeformat.eclipse.xm
 
 spotless {
     java {
-        importOrder(['java', 'javax', 'com', 'org'])
+        importOrder 'java', 'javax', 'com', 'org'
         removeUnusedImports() // removes any unused imports
-        eclipseFormatFile project.ext.codeformatfile  
+        eclipse().configFile(project.ext.codeformatfile)
     }
 }
 
